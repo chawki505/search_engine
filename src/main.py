@@ -1,12 +1,7 @@
 import xml.etree.ElementTree as ET
+import re
 
 litterature_keywords = ["littérature"]
-
-PAGE = "{http://www.mediawiki.org/xml/export-0.10/}page"
-TITLE = "{http://www.mediawiki.org/xml/export-0.10/}title"
-ID = "{http://www.mediawiki.org/xml/export-0.10/}id"
-REVISION = "{http://www.mediawiki.org/xml/export-0.10/}revision"
-TEXT = "{http://www.mediawiki.org/xml/export-0.10/}text"
 
 
 def contains_key_words(text):
@@ -32,7 +27,6 @@ def parse_text_page(text):
         A clean "string" text
     """
     # TODO : Parse links ([], {}..etc) and tags
-    import re
     is_in_subtitle = False
     sub_title_re = "=== Bibliographie ===|== Notes et références ==|== Voir aussi =="
     final_text = ""
@@ -46,7 +40,6 @@ def parse_text_page(text):
         print("==================FIN==========================")
 
     # match = re.search(r"(\{\{.*\}\})", text, flags=re.MULTILINE)
-
     # text = text.replace("{{.*}}", "")
     # text = re.sub(r'\{\{.*}\}', '', text, re.)
 
@@ -61,6 +54,18 @@ def parse_text_page(text):
     return final_text
 
 
+def namespace(element):
+    """
+    :param element
+        The xml element
+    :return:
+        The namespace of element
+        Exemple namespace("'{http://maven.apache.org/POM/4.0.0}project'" -> {http://maven.apache.org/POM/4.0.0}
+    """
+    m = re.match(r'\{.*\}', element.tag)
+    return m.group(0) if m else ''
+
+
 def parse(file_name):
     """
     :param file_name:
@@ -70,12 +75,14 @@ def parse(file_name):
     """
     tree = ET.parse(file_name)
     root = tree.getroot()
+    nspace = namespace(root)
+
     page_list = []
 
-    for page in root.findall(PAGE):
-        title = page.find(TITLE).text
-        id = page.find(ID).text
-        content = page.find(REVISION).find(TEXT).text
+    for page in root.findall("{}page".format(nspace)):
+        title = page.findtext("{}title".format(nspace))
+        id = page.findtext("{}id".format(nspace))
+        content = page.find("{}revision".format(nspace)).findtext("{}text".format(nspace))
         page_list.append((id, title, parse_text_page(content)))
 
     # TODO : filter pages
@@ -87,4 +94,4 @@ if __name__ == '__main__':
 
     mylist = parse(file)
 
-    print(mylist[0][2])
+    print(mylist[0])

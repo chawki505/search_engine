@@ -30,18 +30,8 @@ def parse_text_page(text):
     is_in_subtitle = False
     sub_title_re = "=== Bibliographie ===|== Notes et références ==|== Voir aussi =="
     final_text = ""
-    regex = re.compile("\{\{.*?\}\}", re.MULTILINE | re.DOTALL)
-    match = regex.match(text)
-    if match:
-        # TODO : bug ragex with {{ and }}
-        print("==================DEBUT==========================")
-        print(match.group())
-        text = text.replace(match.group(), "")
-        print("==================FIN==========================")
 
-    # match = re.search(r"(\{\{.*\}\})", text, flags=re.MULTILINE)
-    # text = text.replace("{{.*}}", "")
-    # text = re.sub(r'\{\{.*}\}', '', text, re.)
+    text = delete_brackets(text)
 
     for line in text.split("\n"):
         if re.match(sub_title_re, line):
@@ -52,6 +42,35 @@ def parse_text_page(text):
         if not is_in_subtitle:
             final_text += line + "\n"
     return final_text
+
+
+def delete_brackets(s):
+    stack = []
+    i = 0
+    size = len(s)
+    while i < size - 1:
+        c = s[i]
+        if i == size - 2:
+            return s
+        if c == '{' and s[i + 1] == '{':
+            stack.append(('{', i))
+            i += 2
+        if c == '}' and s[i + 1] == '}':
+            if len(stack) == 1:
+                start_index = stack.pop()[1]
+                s = s[: start_index] + s[i + 2:]
+                i = start_index
+                size = len(s)
+            else:
+                if stack:
+                    stack.pop()
+                else:
+                    s = s[: i] + s[i + 2:]
+                    size = len(s)
+                i += 2
+        else:
+            i += 1
+    return s
 
 
 def namespace(element):
@@ -91,7 +110,8 @@ def parse(file_name):
 
 if __name__ == '__main__':
     file = "../data/frwiki10000.xml"
+    # file = "../data/frwikionepage.xml"
 
     mylist = parse(file)
 
-    print(mylist[0])
+    print(mylist[0][2])

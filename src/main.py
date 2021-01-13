@@ -78,6 +78,34 @@ def parse(file_name):
     # TODO : filter pages
     return page_list
 
+def matrix_to_cli(matrix, size):
+    """
+    :param matrix: squared adjacency matrix
+    :param size: size of @matrix
+    :return:
+        C L I tuple
+    """
+    C = []
+    L = []
+    I = []
+    for i in range(size):
+        print(i)
+        current_row = []
+        for j in range(size):
+            print(j)
+            elem = matrix[i][j]
+            if elem == 0 :
+                continue
+            else :
+                current_row.append(elem)
+                I.append(j)
+                C.append(elem)
+        if len(current_row) > 0 :
+            if not L:
+                L.append(0)
+                L.append(len(current_row))
+            else: L.append(L[-1]+len(current_row))
+    return C,L,I
 
 def create_corpus(init_corpus):
     tree = ET.parse(init_corpus)

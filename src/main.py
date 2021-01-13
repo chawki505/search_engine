@@ -1,6 +1,15 @@
 import xml.etree.ElementTree as ET
 import re
 
+nltk.download('stopwords', quiet=True)
+from nltk.corpus import stopwords
+
+mystopwords = stopwords.words('french')
+
+import spacy
+
+nlp = spacy.load("fr_core_news_md")
+
 litterature_keywords = ["littérature"]
 
 
@@ -106,6 +115,7 @@ def parse(file_name):
 
     # TODO : filter pages
     return page_list
+
 
 
 if __name__ == '__main__':

@@ -16,7 +16,6 @@ litterature_keywords = ["littérature"]
 def contains_key_words(text):
     return any(srchstr in text for srchstr in litterature_keywords)
 
-
 def filter_pages(list):
     """
     Get only pages that talk about our topic
@@ -111,6 +110,7 @@ def parse(file_name):
         title = page.findtext("{}title".format(nspace))
         id = page.findtext("{}id".format(nspace))
         content = page.find("{}revision".format(nspace)).findtext("{}text".format(nspace))
+        # TODO: add only if page is literature
         page_list.append((id, title, parse_text_page(content)))
 
     # TODO : filter pages
@@ -119,8 +119,9 @@ def parse(file_name):
 
 
 if __name__ == '__main__':
-    file = "../data/frwiki10000.xml"
+    # file = "../data/frwiki10000.xml"
     # file = "../data/frwikionepage.xml"
+    file = "../data/frwiki-20201201-pages-articles-multistream.xml"
 
     mylist = parse(file)
 

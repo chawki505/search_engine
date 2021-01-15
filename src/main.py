@@ -1,30 +1,25 @@
 import xml.etree.ElementTree as ET
 import re
 
+from src.utils import valid_category, namespace, delete_brackets
+
 nltk.download('stopwords', quiet=True)
 from nltk.corpus import stopwords
 
 mystopwords = stopwords.words('french')
-
-import spacy
-
-nlp = spacy.load("fr_core_news_md")
-
-litterature_keywords = ["littérature"]
+nlp = spacy.load("fr_core_news_lg")
 
 
-def contains_key_words(text):
-    return any(srchstr in text for srchstr in litterature_keywords)
-
-def filter_pages(list):
+def filter_pages(list_pages):
     """
     Get only pages that talk about our topic
-    :param text:
+    :param list_pages:
     :return:
     """
-    valid_page = lambda tuple: None if not contains_key_words(tuple[1]) and not contains_key_words(tuple[2]) else (
-        tuple[0], tuple[1], tuple[2])
-    return [x for x in filter(valid_page, list)]
+
+    def valid_pages(tuple_page): return valid_category(tuple_page[2])
+
+    return filter(valid_pages, list_pages)
 
 
 def parse_text_page(text):
@@ -52,47 +47,6 @@ def parse_text_page(text):
     return final_text
 
 
-def delete_brackets(s):
-    stack = []
-    i = 0
-    size = len(s)
-    while i < size - 1:
-        c = s[i]
-        if i == size - 2:
-            return s
-        if c == '{' and s[i + 1] == '{':
-            stack.append(('{', i))
-            i += 2
-        if c == '}' and s[i + 1] == '}':
-            if len(stack) == 1:
-                start_index = stack.pop()[1]
-                s = s[: start_index] + s[i + 2:]
-                i = start_index
-                size = len(s)
-            else:
-                if stack:
-                    stack.pop()
-                else:
-                    s = s[: i] + s[i + 2:]
-                    size = len(s)
-                i += 2
-        else:
-            i += 1
-    return s
-
-
-def namespace(element):
-    """
-    :param element
-        The xml element
-    :return:
-        The namespace of element
-        Exemple namespace("'{http://maven.apache.org/POM/4.0.0}project'" -> {http://maven.apache.org/POM/4.0.0}
-    """
-    m = re.match(r'\{.*\}', element.tag)
-    return m.group(0) if m else ''
-
-
 def parse(file_name):
     """
     :param file_name:
@@ -117,11 +71,26 @@ def parse(file_name):
     return page_list
 
 
+def create_corpus(init_corpus):
+    tree = ET.parse(init_corpus)
+    root = tree.getroot()
+    nspace = namespace(root)
+    ET.register_namespace('', nspace.replace('{', '').replace('}', ''))
+    for page in root.findall("{}page".format(nspace)):
+        title = page.findtext("{}title".format(nspace))
+        id = page.findtext("{}id".format(nspace))
+        content = page.find("{}revision".format(nspace)).findtext("{}text".format(nspace))
+        if not valid_category(content):
+            root.remove(page)
+
+    with open("../data/corpus.xml", "w") as out:
+        tree.write(out, encoding="unicode")
+
 
 if __name__ == '__main__':
-    # file = "../data/frwiki10000.xml"
+    file = "../data/frwiki10000.xml"
     # file = "../data/frwikionepage.xml"
-    file = "../data/frwiki-20201201-pages-articles-multistream.xml"
+    # file = "../data/frwiki-20201201-pages-articles-multistream.xml"
 
     mylist = parse(file)
 

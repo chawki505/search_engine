@@ -1,36 +1,49 @@
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import html
+
 import csv
 import time
 import os
 import io
 
-from src.utils import valid_category, strip_tag_name, hms_string
+from src.utils import valid_category
 
-PATH_DATA = '../data/'
+PATH_WIKI_XML = '../data/'
 FILENAME_WIKI = 'frwiki-20201201-pages-articles-multistream.xml'
 # FILENAME_WIKI = 'frwiki10000.xml'
+FILENAME_ARTICLES = 'pages-filtre.csv'
+FILENAME_CORPUS = 'corpus.xml'
 
-FILENAME_PAGES_TITLE_CSV = 'pages-filtre.csv'
+pathWikiXML = os.path.join(PATH_WIKI_XML, FILENAME_WIKI)
+pathPages = os.path.join(PATH_WIKI_XML, FILENAME_ARTICLES)
+pathCorpus = os.path.join(PATH_WIKI_XML, FILENAME_CORPUS)
 
-FILENAME_CORPUS_XML = 'corpus.xml'
 
-pathWikiXML = os.path.join(PATH_DATA, FILENAME_WIKI)
-pathPages = os.path.join(PATH_DATA, FILENAME_PAGES_TITLE_CSV)
-pathCorpus = os.path.join(PATH_DATA, FILENAME_CORPUS_XML)
+# Nicely formatted time string
+def hms_string(sec_elapsed):
+    h = int(sec_elapsed / (60 * 60))
+    m = int((sec_elapsed % (60 * 60)) / 60)
+    s = sec_elapsed % 60
+    return "{}:{:>02}:{:>05.2f}".format(h, m, s)
+
+
+def strip_tag_name(t):
+    idx = t.rfind("}")
+    if idx != -1:
+        t = t[idx + 1:]
+    return t
 
 
 def create_corpus():
     total_pages_count = 0
     total_filtre_pages_count = 0
     title = None
-    # root = None
+    root = None
 
     start_time = time.time()
 
-    with io.open(pathPages, 'w') as pagesFH, \
-            io.open(pathCorpus, 'w') as corpusFH:
+    with io.open(pathPages, 'w') as pagesFH:
 
         page_writer_csv = csv.writer(pagesFH, quoting=csv.QUOTE_MINIMAL)
 
@@ -40,8 +53,7 @@ def create_corpus():
             tname = strip_tag_name(elem.tag)
             if event == 'start':
                 if tname == 'mediawiki':
-                    # root = ET.Element(tname)
-                    corpusFH.write("<mediawiki>\n")
+                    root = ET.Element(tname)
                 if tname == 'page':
                     ns = 0
                     title = ''
@@ -66,46 +78,32 @@ def create_corpus():
 
                     if ns == 0 and valid_category(content):
                         total_filtre_pages_count += 1
-                        # page_elem = ET.SubElement(root, tname)
-                        page_elem = ET.Element('page')
-                        page_elem.text = "\n\t\t"
-                        page_elem.tail = "\n"
+                        page_elem = ET.SubElement(root, tname)
 
                         title_elem = ET.SubElement(page_elem, 'title')
                         title_elem.text = title
-                        title_elem.tail = "\n\t\t"
 
                         id_elem = ET.SubElement(page_elem, 'id')
                         id_elem.text = str(id)
-                        id_elem.tail = "\n\t\t"
 
                         text_elem = ET.SubElement(page_elem, 'text')
                         text_elem.text = content
-                        text_elem.tail = "\n\t"
 
                         page_writer_csv.writerow([id, title])
-                        corpusFH.write("\t")
-                        corpusFH.write(ET.tostring(page_elem, encoding='unicode'))
-                        # xml_str_page = minidom.parseString(ET.tostring(page_elem, encoding='unicode')).toprettyxml()
-                        # corpusFH.write(xml_str_page)
+
                     if total_pages_count > 1 and (total_pages_count % 10000) == 0:
                         print("Current pages : {:,}".format(total_pages_count))
                         print("Current pages filtre: {:,}".format(total_filtre_pages_count))
 
                 elem.clear()
-            # limit corpus to 250K pages
-            # if total_filtre_pages_count >= 250000:
-            #    break
-        # xmlstr = minidom.parseString(ET.tostring(root, encoding='unicode')).toprettyxml()
-        # xmlstr = ET.tostring(root, encoding='unicode')
-        # tree = ET.ElementTree(root)
+            # limit corpus to 500K pages
+            if total_filtre_pages_count == 500000:
+                break
+    xmlstr = minidom.parseString(ET.tostring(root, encoding='unicode')).toprettyxml()
 
-        # with io.open(pathCorpus, 'w') as corpusFH:
+    with io.open(pathCorpus, 'w') as corpusFH:
         # corpusFH.write(html.unescape(xmlstr))
-        # corpusFH.write(xmlstr)
-        # tree.write(corpusFH, encoding='unicode', method='xml')
-
-        corpusFH.write("</mediawiki>")
+        corpusFH.write(xmlstr)
 
     elapsed_time = time.time() - start_time
     print("Total pages: {:,}".format(total_pages_count))

@@ -110,6 +110,5 @@ def create_corpus():
     print("Total pages filtre: {:,}".format(total_filtre_pages_count))
     print("Elapsed time: {}".format(hms_string(elapsed_time)))
 
-
 if __name__ == '__main__':
     create_corpus()

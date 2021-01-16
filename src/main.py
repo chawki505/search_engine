@@ -1,4 +1,11 @@
 import xml.etree.ElementTree as ET
+
+# from nltk import pos_tag, word_tokenize
+
+import string
+import nltk
+import spacy
+# import contractions
 import re
 
 from src.utils import valid_category, namespace, delete_brackets
@@ -54,6 +61,7 @@ def parse(file_name):
     :return:
         List of tuple containing (id, title, content) for each page
     """
+
     tree = ET.parse(file_name)
     root = tree.getroot()
     nspace = namespace(root)
@@ -87,11 +95,38 @@ def create_corpus(init_corpus):
         tree.write(out, encoding="unicode")
 
 
+def clean(text):
+    """
+    :param text: text to clean
+    :return:
+        Apply lemmeization to @text and return it
+    """
+
+    # make str low
+    text = text.lower()
+
+    # TODO: fix contrations in french
+    # remove contraction
+    # text = contractions.fix(text)
+
+    # remove punctuations
+    punctuations_reg = re.compile('[%s]' % re.escape(string.punctuation))
+    text = punctuations_reg.sub(r'', text)
+
+    # remove stopwords
+    text = ' '.join([elem for elem in text.split() if elem not in mystopwords])
+
+    # Lemmatization
+    text = ' '.join([x.lemma_ for x in nlp(text)])
+
+    return text
+
+
 if __name__ == '__main__':
     file = "../data/frwiki10000.xml"
     # file = "../data/frwikionepage.xml"
     # file = "../data/frwiki-20201201-pages-articles-multistream.xml"
 
-    mylist = parse(file)
+    # mylist = parse(file)
 
-    print(mylist[0][2])
+    # print(mylist[0][2])

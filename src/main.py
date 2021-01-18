@@ -1,7 +1,14 @@
 import xml.etree.ElementTree as ET
+
+# from nltk import pos_tag, word_tokenize
+
+import string
+import nltk
+import spacy
+# import contractions
 import re
 
-from src.utils import valid_category, namespace, delete_brackets
+from utils import valid_category, namespace, delete_brackets
 
 nltk.download('stopwords', quiet=True)
 from nltk.corpus import stopwords
@@ -47,6 +54,7 @@ def parse_text_page(text):
     return final_text
 
 
+# TODO: change this function to read corpus diractly (in stream like create_corpus())
 def parse(file_name):
     """
     :param file_name:
@@ -54,6 +62,7 @@ def parse(file_name):
     :return:
         List of tuple containing (id, title, content) for each page
     """
+
     tree = ET.parse(file_name)
     root = tree.getroot()
     nspace = namespace(root)
@@ -97,27 +106,36 @@ def matrix_to_cli(matrix, size):
             else: L.append(L[-1]+len(current_row))
     return C,L,I
 
-def create_corpus(init_corpus):
-    tree = ET.parse(init_corpus)
-    root = tree.getroot()
-    nspace = namespace(root)
-    ET.register_namespace('', nspace.replace('{', '').replace('}', ''))
-    for page in root.findall("{}page".format(nspace)):
-        title = page.findtext("{}title".format(nspace))
-        id = page.findtext("{}id".format(nspace))
-        content = page.find("{}revision".format(nspace)).findtext("{}text".format(nspace))
-        if not valid_category(content):
-            root.remove(page)
+def clean(text):
+    """
+    :param text: text to clean
+    :return:
+        Apply lemmeization to @text and return it
+    """
 
-    with open("../data/corpus.xml", "w") as out:
-        tree.write(out, encoding="unicode")
+    # make str low
+    text = text.lower()
+
+    # TODO: fix contrations in french
+    # remove contraction
+    # text = contractions.fix(text)
+
+    # remove punctuations
+    punctuations_reg = re.compile('[%s]' % re.escape(string.punctuation))
+    text = punctuations_reg.sub(r'', text)
+
+    # remove stopwords
+    text = ' '.join([elem for elem in text.split() if elem not in mystopwords])
+
+    # Lemmatization
+    text = ' '.join([x.lemma_ for x in nlp(text)])
+
+    return text
 
 
 if __name__ == '__main__':
     file = "../data/frwiki10000.xml"
-    # file = "../data/frwikionepage.xml"
-    # file = "../data/frwiki-20201201-pages-articles-multistream.xml"
 
-    mylist = parse(file)
+    # mylist = parse(file)
 
-    print(mylist[0][2])
+    # print(mylist[0][2])

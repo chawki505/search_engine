@@ -1,11 +1,8 @@
 import xml.etree.ElementTree as ET
 
-# from nltk import pos_tag, word_tokenize
-
 import string
 import nltk
 import spacy
-# import contractions
 import re
 
 from utils import delete_brackets
@@ -53,20 +50,22 @@ def parse(file_name):
     page_list = []
     total_pages_count = 0
 
-    id = -1
-    title = ""
-    content = ""
+    id = None
+    title = None
+    content = None
 
     for event, elem in ET.iterparse(file_name, events=('start', 'end')):
 
         tname = elem.tag
 
         if event == 'start':
+
             if tname == 'page':
                 title = ''
                 id = -1
                 content = ''
-        elif event == 'end':
+
+        else:
 
             if tname == 'title':
                 title = elem.text
@@ -78,9 +77,8 @@ def parse(file_name):
                 content = elem.text
 
             elif tname == 'page':
-
-                page_list.append((id, title, parse_text_page(content)))
                 total_pages_count += 1
+                page_list.append((id, title, parse_text_page(content)))
 
             elem.clear()
 

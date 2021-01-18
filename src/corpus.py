@@ -25,6 +25,10 @@ def create_corpus():
     total_pages_count = 0
     total_filtre_pages_count = 0
     title = None
+    id = None
+    content = None
+    ns = None
+    in_revision = False
     is_created = False
 
     start_time = time.time()
@@ -36,7 +40,8 @@ def create_corpus():
         page_writer_csv.writerow(['id', 'title'])
 
         for event, elem in ET.iterparse(pathWikiXML, events=('start', 'end')):
-            tname = strip_tag_name(elem)
+            tname = strip_tag_name(elem.tag)
+
             if event == 'start':
 
                 if tname == 'mediawiki':
@@ -47,20 +52,20 @@ def create_corpus():
                     ns = 0
                     title = ''
                     id = -1
-                    inrevision = False
+                    in_revision = False
                     content = ''
 
                 elif tname == 'revision':
                     # Do not pick up on revision id's
-                    inrevision = True
+                    in_revision = True
             else:
                 if tname == 'title':
                     title = elem.text
-                elif tname == 'id' and not inrevision:
+                elif tname == 'id' and not in_revision:
                     id = int(elem.text)
                 elif tname == 'ns':
                     ns = int(elem.text)
-                elif tname == 'text' and inrevision:
+                elif tname == 'text' and in_revision:
                     content = elem.text
 
                 elif tname == 'page':

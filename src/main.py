@@ -17,18 +17,6 @@ mystopwords = stopwords.words('french')
 nlp = spacy.load("fr_core_news_lg")
 
 
-def filter_pages(list_pages):
-    """
-    Get only pages that talk about our topic
-    :param list_pages:
-    :return:
-    """
-
-    def valid_pages(tuple_page): return valid_category(tuple_page[2])
-
-    return filter(valid_pages, list_pages)
-
-
 def parse_text_page(text):
     """
     Parse text to only get main parts of the text ("== Title ==" paragraphs)
@@ -64,6 +52,11 @@ def parse(file_name):
     """
 
     page_list = []
+    total_pages_count = 0
+
+    id = -1
+    title = ""
+    content = ""
 
     for event, elem in ET.iterparse(file_name, events=('start', 'end')):
 

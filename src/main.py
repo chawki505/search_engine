@@ -42,7 +42,6 @@ def parse_text_page(text):
     return final_text
 
 
-# TODO: change this function to read corpus diractly (in stream like create_corpus())
 def parse(file_name):
     """
     :param file_name:

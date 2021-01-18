@@ -127,10 +127,8 @@ def matrix_to_cli(matrix, size):
     L = []
     I = []
     for i in range(size):
-        print(i)
         current_row = []
         for j in range(size):
-            print(j)
             elem = matrix[i][j]
             if elem == 0 :
                 continue

@@ -8,7 +8,7 @@ import spacy
 # import contractions
 import re
 
-from utils import valid_category, namespace, delete_brackets
+from utils import delete_brackets
 
 nltk.download('stopwords', quiet=True)
 from nltk.corpus import stopwords
@@ -63,20 +63,38 @@ def parse(file_name):
         List of tuple containing (id, title, content) for each page
     """
 
-    tree = ET.parse(file_name)
-    root = tree.getroot()
-    nspace = namespace(root)
-
     page_list = []
 
-    for page in root.findall("{}page".format(nspace)):
-        title = page.findtext("{}title".format(nspace))
-        id = page.findtext("{}id".format(nspace))
-        content = page.find("{}revision".format(nspace)).findtext("{}text".format(nspace))
-        # TODO: add only if page is literature
-        page_list.append((id, title, parse_text_page(content)))
+    for event, elem in ET.iterparse(file_name, events=('start', 'end')):
 
-    # TODO : filter pages
+        tname = elem.tag
+
+        if event == 'start':
+            if tname == 'page':
+                title = ''
+                id = -1
+                content = ''
+        elif event == 'end':
+
+            if tname == 'title':
+                title = elem.text
+
+            elif tname == 'id':
+                id = int(elem.text)
+
+            elif tname == 'text':
+                content = elem.text
+
+            elif tname == 'page':
+
+                page_list.append((id, title, parse_text_page(content)))
+                total_pages_count += 1
+
+                if total_pages_count == 2:
+                    break
+
+            elem.clear()
+
     return page_list
 
 
@@ -137,8 +155,8 @@ def clean(text):
 
 
 if __name__ == '__main__':
-    file = "../data/frwiki10000.xml"
+    file = "../data/corpus.xml"
 
-    # mylist = parse(file)
+    mylist = parse(file)
 
-    # print(mylist[0][2])
+    print(mylist)

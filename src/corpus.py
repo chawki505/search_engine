@@ -36,7 +36,7 @@ def create_corpus():
         page_writer_csv.writerow(['id', 'title'])
 
         for event, elem in ET.iterparse(pathWikiXML, events=('start', 'end')):
-            tname = strip_tag_name(elem.tag)
+            tname = strip_tag_name(elem)
             if event == 'start':
 
                 if tname == 'mediawiki':

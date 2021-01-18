@@ -82,9 +82,6 @@ def parse(file_name):
                 page_list.append((id, title, parse_text_page(content)))
                 total_pages_count += 1
 
-                if total_pages_count == 2:
-                    break
-
             elem.clear()
 
     return page_list

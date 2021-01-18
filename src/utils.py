@@ -59,3 +59,19 @@ def namespace(element):
     """
     m = re.match(r'\{.*\}', element.tag)
     return m.group(0) if m else ''
+
+
+# Nicely formatted time string
+def hms_string(sec_elapsed):
+    h = int(sec_elapsed / (60 * 60))
+    m = int((sec_elapsed % (60 * 60)) / 60)
+    s = sec_elapsed % 60
+    return "{}:{:>02}:{:>05.2f}".format(h, m, s)
+
+
+def strip_tag_name(elem):
+    t = elem.tag
+    idx = k = t.rfind("}")
+    if idx != -1:
+        t = t[idx + 1:]
+    return t

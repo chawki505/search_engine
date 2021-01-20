@@ -31,6 +31,7 @@ def matrix_to_cli(matrix, size):
                 L.append(L[-1] + len(current_row))
     return C, L, I
 
+
 def get_links(page_text):
     """
     :param page_text: Page text

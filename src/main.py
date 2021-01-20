@@ -156,16 +156,16 @@ def pages_to_matrix(l):
     """
     edge : [[Title]] in page content
     node : page id
-    :param l: list of pair containing (title, page content)
+    :param l: list of pair containing (id, title, page content)
     :return:
         adjacency matrix of the web graph
     """
     m_len = len(l)
     matrix = [[0 for i in range(m_len)] for j in range(m_len)]
-    for i, (title, page) in enumerate(l):
+    for i, (_, title, page) in enumerate(l):
         links = get_links(page)
         for link in links:
-            link_id = next(i for i, (title, page) in enumerate(l) if title == link)
+            link_id = next(i for i, (_, title, page) in enumerate(l) if title == link)
             val = 1/len(links)
             matrix[i][link_id] = val
     return matrix

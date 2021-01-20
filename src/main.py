@@ -26,7 +26,8 @@ def pages_to_matrix(l):
         links = get_links(page)
         for link in links:
             link_id = next(i for i, (title, page) in enumerate(l) if title == link)
-            matrix[i][link_id] = 1 / len(links)
+            val = 1/len(links)
+            matrix[i][link_id] = val
     return matrix
 
 

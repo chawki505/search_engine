@@ -85,36 +85,6 @@ def parse(file_name):
     return page_list
 
 
-def matrix_to_cli(matrix, size):
-    """
-    :param matrix: squared adjacency matrix
-    :param size: size of @matrix
-    :return:
-        C L I tuple
-    """
-    C = []
-    L = []
-    I = []
-    for i in range(size):
-        current_row = []
-        for j in range(size):
-
-            elem = matrix[i][j]
-            if elem == 0:
-                continue
-            else:
-                current_row.append(elem)
-                I.append(j)
-                C.append(elem)
-        if len(current_row) > 0:
-            if not L:
-                L.append(0)
-                L.append(len(current_row))
-            else:
-                L.append(L[-1] + len(current_row))
-    return C, L, I
-
-
 def clean(text):
     """
     :param text: text to clean
@@ -141,34 +111,47 @@ def clean(text):
 
     return text
 
+
 def get_links(page_text):
     """
-    :param page_text: Page texte
+    :param page_text: Page text
     :return:
-    The list of externals link of the page
+    The list of external link of the page
     """
     import re
     l = re.findall('\[\[.*?\]\]', page_text)
     return [s[2:-2] for s in l]
 
 
-def pages_to_matrix(l):
+def pages_to_cli(l):
     """
     edge : [[Title]] in page content
     node : page id
     :param l: list of pair containing (id, title, page content)
     :return:
-        adjacency matrix of the web graph
+        Adjacency matrix of the web graph in CLI form
     """
+    C = []
+    L = []
+    I = []
     m_len = len(l)
     matrix = [[0 for i in range(m_len)] for j in range(m_len)]
     for i, (_, title, page) in enumerate(l):
         links = get_links(page)
+        edge_nb = len(links)
+        val = 1 / edge_nb
         for link in links:
             link_id = next(i for i, (_, title, page) in enumerate(l) if title == link)
-            val = 1/len(links)
+            C.append(val)
+            I.append(link_id)
             matrix[i][link_id] = val
-    return matrix
+        if edge_nb > 0:
+            if not L:
+                L.append(0)
+                L.append(edge_nb)
+            else:
+                L.append(L[-1] + edge_nb)
+    return C, L, I
 
 
 if __name__ == '__main__':

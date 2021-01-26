@@ -45,6 +45,7 @@ def pages_to_cli(l):
                 L.append(L[-1] + edge_nb)
     return C, L, I
 
+
 def create_dict(page_list):
     """
     :param page_list: list of pages to parse

@@ -1,5 +1,5 @@
-from parse import parse
-
+from parse import parse, nlp
+import math
 
 
 def get_links(page_text):
@@ -43,6 +43,7 @@ def pages_to_cli(l):
                 L.append(L[-1] + edge_nb)
     return C, L, I
 
+
 def create_dict(page_list):
     """
     :param page_list: list of pages to parse
@@ -54,12 +55,12 @@ def create_dict(page_list):
     for (id, title, content) in page_list:
         title_lemmatized = [x.lemma_ for x in nlp(title)]
         for word in title_lemmatized:
-            if word not in dico_title.keys(): # word not in dict
-                dico_title[word] = ({id : 1}, 0)
-            else: # word in dict
-                if id not in dico_title[word][0].keys(): # page is not in list
+            if word not in dico_title.keys():  # word not in dict
+                dico_title[word] = ({id: 1}, 0)
+            else:  # word in dict
+                if id not in dico_title[word][0].keys():  # page is not in list
                     dico_title[word][0][id] = 1
-                else : # page already in list
+                else:  # page already in list
                     dico_title[word][0][id] += 1
         for word in content:
             if word not in dico_text.keys():
@@ -69,25 +70,25 @@ def create_dict(page_list):
                     dico_text[word][0][id] = 1
                 else:  # page already in list
                     dico_text[word][0][id] += 1
-    dico_title.update({key: value for key, value in sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))[-10000:]})
-    tf_norm = dict() # normalized TF
+    dico_title.update({key: value for key, value in
+                       sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))[-10000:]})
+    tf_norm = dict()  # normalized TF
     for word, (occ_dic, idf) in dico_title.items():
-        for pageid, freq in occ_dic.items() :
+        for pageid, freq in occ_dic.items():
             if freq > 0:
                 if pageid not in tf_norm.keys():
-                    tf_norm[pageid] = (1 + math.log10(freq))**2
-                else :
-                    tf_norm[pageid] += (1 + math.log10(freq))**2
+                    tf_norm[pageid] = (1 + math.log10(freq)) ** 2
+                else:
+                    tf_norm[pageid] += (1 + math.log10(freq)) ** 2
     # writing IDF and normalized TF
     for word in dico_title.keys():
-        idf = math.log10(len(page_list)/len(dico_title[word][0].keys()))
+        idf = math.log10(len(page_list) / len(dico_title[word][0].keys()))
         dico_title[word] = (dico_title[word][0], idf)
         for page, tf in dico_title[word][0].items():
-            dico_title[word][0][page] = tf/math.sqrt(tf_norm[page])
+            dico_title[word][0][page] = tf / math.sqrt(tf_norm[page])
     return dico_title
-    
-            
+
 
 if __name__ == '__main__':
-    # file = "../data/corpus.xml"
-    # file = "../data/frwiki10000.xml"
+# file = "../data/corpus.xml"
+# file = "../data/frwiki10000.xml"

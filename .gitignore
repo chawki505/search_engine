@@ -4,7 +4,6 @@ data/corpus.xml
 data/corpus3.xml
 
 .idea
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -5,7 +5,7 @@ import nltk
 import spacy
 import re
 
-from utils import delete_brackets
+from utils import delete_brackets, serialize, deserialize
 
 nltk.download('stopwords', quiet=True)
 from nltk.corpus import stopwords
@@ -183,4 +183,3 @@ def create_dict(page_list):
 if __name__ == '__main__':
     # file = "../data/corpus.xml"
     # file = "../data/frwiki10000.xml"
-    # file = "../data/test.xml"

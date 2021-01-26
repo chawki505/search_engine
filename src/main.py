@@ -73,4 +73,3 @@ def create_dict(page_list):
 if __name__ == '__main__':
     # file = "../data/corpus.xml"
     # file = "../data/frwiki10000.xml"
-    # file = "../data/test.xml"

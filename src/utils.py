@@ -2,6 +2,7 @@ import re
 
 # for serialization
 import pickle
+
 mystopwords = ["a", "abord", "absolument", "afin", "ah", "ai", "aie", "aient", "aies", "ailleurs", "ainsi", "ait",
                "allaient", "allo", "allons", "allô", "alors", "anterieur", "anterieure", "anterieures", "apres",
                "après", "as", "assez", "attendu", "au", "aucun", "aucune", "aucuns", "aujourd", "aujourd'hui", "aupres",
@@ -188,6 +189,7 @@ def strip_tag_name(t):
 def serialize(d, path):
     with open(path, "wb") as file:
         file.write(pickle.dumps(d))
+
 
 def deserialize(path):
     with open(path, "rb") as file:

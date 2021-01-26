@@ -1,5 +1,7 @@
 import re
 
+# for serialization 
+import pickle
 
 def valid_category(page):
     """
@@ -117,3 +119,12 @@ def strip_tag_name(t):
     if idx != -1:
         t = t[idx + 1:]
     return t
+
+
+def serialize(d, path):
+    with open(path, "wb") as file:
+        file.write(pickle.dumps(d))
+
+def deserialize(path):
+    with open(path, "rb") as file:
+        return pickle.load(file)

@@ -61,7 +61,7 @@ def create_dict(page_list):
                     dico_title[word][0][id] = 1
                 else : # page already in list
                     dico_title[word][0][id] += 1
-        for word in clean(content).split():
+        for word in content:
             if word not in dico_text.keys():
                 dico_text[word] = ({id: 1}, 0)
             else:

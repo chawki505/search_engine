@@ -1,5 +1,6 @@
 
 data/test.xml
+data/corpus.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

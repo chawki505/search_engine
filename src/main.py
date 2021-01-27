@@ -1,16 +1,14 @@
 import xml.etree.ElementTree as ET
 
 import string
-import nltk
-import spacy
 import re
 
-from utils import delete_brackets
+from bs4 import BeautifulSoup
 
-nltk.download('stopwords', quiet=True)
-from nltk.corpus import stopwords
+from utils import delete_brackets, mystopwords
 
-mystopwords = stopwords.words('french')
+import spacy
+
 nlp = spacy.load("fr_core_news_lg")
 
 
@@ -115,36 +113,37 @@ def matrix_to_cli(matrix, size):
     return C, L, I
 
 
-def clean(text):
+def clean(page):
     """
-    :param text: text to clean
+    :param page: text to clean
     :return:
-        Apply lemmeization to @text and return it
+        Apply cleanup and return a list of words
     """
 
-    # make str low
-    text = text.lower()
+    # format html
+    soup = BeautifulSoup(page, "html5lib")
+    text = soup.get_text(strip=True)
 
-    # TODO: fix contrations in french
-    # remove contraction
-    # text = contractions.fix(text)
+    # supprimer la punctuations
+    croch_reg = re.compile(r"\[{2}|\]{2}")
+    text = croch_reg.sub(r'', text)
 
-    # remove punctuations
-    punctuations_reg = re.compile('[%s]' % re.escape(string.punctuation))
-    text = punctuations_reg.sub(r'', text)
+    punctuations_reg = re.compile(r"[!\"#$%&()*+’,-./:;<=>«»?@\[\]^_`{|}~]+|'{2,5}|http(s)?://\S+|www.\S+")
+    # digits_reg = re.compile('[%s]' % re.escape(string.digits))
+    text = punctuations_reg.sub(r' ', text)
+    text = " ".join(text.split())
 
-    # remove stopwords
-    text = ' '.join([elem for elem in text.split() if elem not in mystopwords])
+    # Tokeniser le text
+    tokens = nlp(text)
 
     # Lemmatization
-    text = ' '.join([x.lemma_ for x in nlp(text)])
+    lemm_tokens = [str(x.lemma_).lower() for x in tokens if
+                   str(x.text).lower() not in mystopwords and str(x.lemma_).lower() not in mystopwords]
 
-    return text
+    return lemm_tokens
 
 
 if __name__ == '__main__':
-    file = "../data/corpus.xml"
+    file = "../data/corpus2.xml"
 
     mylist = parse(file)
-
-    print(mylist)

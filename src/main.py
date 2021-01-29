@@ -43,10 +43,34 @@ def pages_to_cli(l):
                 L.append(L[-1] + edge_nb)
     return C, L, I
 
+def create_dict(page_list):
+    """
+    :param page_list: list of pages to parse
+    :return:
+        Dictionnary of ~10k most used words cpntaining all the words from titles
+    """
+    dico_title = dict()
+    dico_text = dict()
+    for (id, title, content) in page_list:
+        title_lematised = [x.lemma_ for x in nlp(title)]
+        for word in title_lematised:
+            if word not in dico_title.keys():
+                dico_title[word] = [id]
+            else:
+                if not id in dico_title[word] :
+                    dico_title[word].append(id)
+        for word in clean(content).split():
+            if word not in dico_text.keys():
+                dico_text[word] = [id]
+            else:
+                if not id in dico_text[word]:
+                    dico_text[word].append(id)
+    dico_title.update({key: value for key, value in sorted(list(dico_text.items()), key=lambda item: len(item[1]))[-10000:]})
+    return dico_title
+    
+            
 
 if __name__ == '__main__':
-    file = "../data/corpus.xml"
-
-    mylist = parse(file)
-
-    print(mylist)
+    # file = "../data/corpus.xml"
+    # file = "../data/frwiki10000.xml"
+    # file = "../data/test.xml"

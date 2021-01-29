@@ -10,11 +10,11 @@ PATH_DATA = '../data/'
 # FILENAME_WIKI = 'frwiki-20201201-pages-articles-multistream.xml'
 FILENAME_WIKI = 'frwiki10000.xml'
 
-# FILENAME_PAGES_TITLE_CSV = 'pages-filtre.csv'
-FILENAME_PAGES_TITLE_CSV = 'pages-filtre2.csv'
+FILENAME_PAGES_TITLE_CSV = 'pages-filtre.csv'
+# FILENAME_PAGES_TITLE_CSV = 'pages-filtre2.csv'
 
-# FILENAME_CORPUS_XML = 'corpus.xml'
-FILENAME_CORPUS_XML = 'corpus2.xml'
+FILENAME_CORPUS_XML = 'corpus.xml'
+# FILENAME_CORPUS_XML = 'corpus2.xml'
 
 pathWikiXML = os.path.join(PATH_DATA, FILENAME_WIKI)
 pathPages = os.path.join(PATH_DATA, FILENAME_PAGES_TITLE_CSV)

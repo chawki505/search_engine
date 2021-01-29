@@ -1,17 +1,14 @@
 import xml.etree.ElementTree as ET
 
 import string
-import nltk
-import spacy
 import re
 import math
 
-from utils import delete_brackets, serialize, deserialize
+from bs4 import BeautifulSoup
+from utils import delete_brackets, serialize, deserialize, mystopwords
 
-nltk.download('stopwords', quiet=True)
-from nltk.corpus import stopwords
+import spacy
 
-mystopwords = stopwords.words('french')
 nlp = spacy.load("fr_core_news_lg")
 
 
@@ -86,31 +83,64 @@ def parse(file_name):
     return page_list
 
 
-def clean(text):
+def matrix_to_cli(matrix, size):
     """
-    :param text: text to clean
+    :param matrix: squared adjacency matrix
+    :param size: size of @matrix
     :return:
-        Apply lemmeization to @text and return it
+        C L I tuple
+    """
+    C = []
+    L = []
+    I = []
+    for i in range(size):
+        current_row = []
+        for j in range(size):
+
+            elem = matrix[i][j]
+            if elem == 0:
+                continue
+            else:
+                current_row.append(elem)
+                I.append(j)
+                C.append(elem)
+        if len(current_row) > 0:
+            if not L:
+                L.append(0)
+                L.append(len(current_row))
+            else:
+                L.append(L[-1] + len(current_row))
+    return C, L, I
+
+
+def clean(page):
+    """
+    :param page: text to clean
+    :return:
+        Apply cleanup and return a list of words
     """
 
-    # make str low
-    text = text.lower()
+    # format html
+    soup = BeautifulSoup(page, "html5lib")
+    text = soup.get_text(strip=True)
 
-    # TODO: fix contrations in french
-    # remove contraction
-    # text = contractions.fix(text)
+    # supprimer la punctuations
+    croch_reg = re.compile(r"\[{2}|\]{2}")
+    text = croch_reg.sub(r'', text)
 
-    # remove punctuations
-    punctuations_reg = re.compile('[%s]' % re.escape(string.punctuation))
-    text = punctuations_reg.sub(r'', text)
+    punctuations_reg = re.compile(r"[!\"#$%&()*+’,-./:;<=>«»?@\[\]^_`{|}~]+|'{2,5}|http(s)?://\S+|www.\S+")
+    # digits_reg = re.compile('[%s]' % re.escape(string.digits))
+    text = punctuations_reg.sub(r' ', text)
+    text = " ".join(text.split())
 
-    # remove stopwords
-    text = ' '.join([elem for elem in text.split() if elem not in mystopwords])
+    # Tokeniser le text
+    tokens = nlp(text)
 
     # Lemmatization
-    text = ' '.join([x.lemma_ for x in nlp(text)])
+    lemm_tokens = [str(x.lemma_).lower() for x in tokens if
+                   str(x.text).lower() not in mystopwords and str(x.lemma_).lower() not in mystopwords]
 
-    return text
+    return lemm_tokens
 
 
 def get_links(page_text):
@@ -189,16 +219,15 @@ def create_dict(page_list):
                     tf_norm[pageid] = (1 + math.log10(freq))**2
                 else :
                     tf_norm[pageid] += (1 + math.log10(freq))**2
-    # writing IDF and normalized TF 
+    # writing IDF and normalized TF
     for word in dico_title.keys():
         idf = math.log10(len(page_list)/len(dico_title[word][0].keys()))
         dico_title[word] = (dico_title[word][0], idf)
         for page, tf in dico_title[word][0].items():
             dico_title[word][0][page] = tf/math.sqrt(tf_norm[page])
     return dico_title
-    
-            
+
+
 
 if __name__ == '__main__':
-    # file = "../data/corpus.xml"
-    # file = "../data/frwiki10000.xml"
+    pass

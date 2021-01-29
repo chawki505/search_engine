@@ -1,6 +1,4 @@
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
-import html
 import csv
 import time
 import os
@@ -9,12 +7,14 @@ import io
 from utils import valid_category, strip_tag_name, hms_string
 
 PATH_DATA = '../data/'
-FILENAME_WIKI = 'frwiki-20201201-pages-articles-multistream.xml'
-# FILENAME_WIKI = 'frwiki10000.xml'
+# FILENAME_WIKI = 'frwiki-20201201-pages-articles-multistream.xml'
+FILENAME_WIKI = 'frwiki10000.xml'
 
-FILENAME_PAGES_TITLE_CSV = 'pages-filtre.csv'
+# FILENAME_PAGES_TITLE_CSV = 'pages-filtre.csv'
+FILENAME_PAGES_TITLE_CSV = 'pages-filtre2.csv'
 
-FILENAME_CORPUS_XML = 'corpus.xml'
+# FILENAME_CORPUS_XML = 'corpus.xml'
+FILENAME_CORPUS_XML = 'corpus2.xml'
 
 pathWikiXML = os.path.join(PATH_DATA, FILENAME_WIKI)
 pathPages = os.path.join(PATH_DATA, FILENAME_PAGES_TITLE_CSV)

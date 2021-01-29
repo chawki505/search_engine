@@ -1,4 +1,4 @@
-from parse import parse
+from parse import parse, nlp
 import math
 
 

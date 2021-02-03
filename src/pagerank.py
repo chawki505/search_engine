@@ -1,4 +1,3 @@
-import copy
 from parse import pages_to_cli
 
 
@@ -9,19 +8,20 @@ def error(pi, pre_pi):
     return c
 
 
-def jsais_pas(C, L, I, Pi, n, k= 0):
-    # min_error = 0.3
-    # pre_pi = copy.copy(Pi)
-    for i in range(n):
-        if L[i] == L[i + 1]:  # Empty line
-            for j in range(n):
-                Pi[j] += 1 / n * Pi[i]
-        else:
-            for j in range(L[i], L[i + 1]):
-                Pi[I[j]] += C[j] * Pi[j]
-    if k > 5:
-        return Pi
-    return jsais_pas(C, L, I, Pi, n, k+1)
+def oskour(C, L, I, n, k=1):
+    Pi = [1 / n for _ in range(n)]
+    P = [0] * n
+    for _ in range(k):
+        for i in range(n):
+            if (i + 1 < len(L)):
+                if L[i] == L[i + 1]:  # Empty line
+                    for j in range(n):
+                        P[j] += 1 / n * Pi[i]
+                else:
+                    for j in range(L[i], L[i + 1]):
+                        P[I[j]] += C[j] * Pi[i]
+    return P
+
 
 if __name__ == '__main__':
     file = "../data/corpus.xml"
@@ -33,8 +33,10 @@ if __name__ == '__main__':
         (0, "Page4", "sdldlkfjasdfweroiwerweiru"),
         (0, "Page5", "sdldlkfjasdfweroiwerweiru")
     ]
-    C,L,I = pages_to_cli(l_test)
+    C, L, I = pages_to_cli(l_test)
 
-    n = 6
-    pi = jsais_pas(C,L,I,[1/n for _ in range (n)],n)
-    print(pi)
+    print(C)
+    print(L)
+    print(I)
+
+    print(oskour(C, L, I, 6))

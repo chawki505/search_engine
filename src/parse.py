@@ -34,20 +34,17 @@ def pages_to_cli(l):
     C = []
     L = []
     I = []
-    m_len = len(l)
-    matrix = [[0 for i in range(m_len)] for j in range(m_len)]
     for i, (_, title, page) in enumerate(l):
         links = get_links(page)
         edge_nb = len(links)
         val = 1 / edge_nb
         for link in links:
             try : 
-                link_id = next(i for i, (_, title, page) in enumerate(l) if title == link)
+                link_id = next(i for i, (_, title, _) in enumerate(l) if title == link)
             except Exception as e:
                 continue
             C.append(val)
             I.append(link_id)
-            matrix[i][link_id] = val
         if edge_nb > 0:
             if not L:
                 L.append(0)

@@ -31,6 +31,11 @@ def pages_to_cli(l):
     :return:
         Adjacency matrix of the web graph in CLI form
     """
+    dic = {}
+    print("Hashmap creation")
+    for i, (_, title, _) in enumerate(l):
+        dic[title] = i 
+    print("Hashmap created")
     C = []
     L = [0]
     I = []
@@ -39,10 +44,9 @@ def pages_to_cli(l):
         edge_nb = len(links)
         val = 1 / edge_nb if edge_nb > 0 else 0
         for link in links:
-            try : 
-                link_id = next(i for i, (_, title, _) in enumerate(l) if title == link)
-            except Exception as e:
+            if link not in dic.keys():
                 continue
+            link_id = dic[link]
             C.append(val)
             I.append(link_id)
         L.append(L[-1] + edge_nb)
@@ -200,3 +204,18 @@ def parse(file_name):
             print(str(i/listsize * 100), "%")
         page_list[i] = (id, title, clean(content))
     return page_list, (C, L, I)
+
+if __name__ == '__main__':
+    file = "../data/corpus.xml"
+    l_test = [
+        (0, "Page0", "sdldlkfjasdf[[Page1]]weroiw[[Page3]]erweiru"),
+        (0, "Page1", "sdldlkfjasdf[[Page0]]weroiwerweiru"),
+        (0, "Page2", "sdldlkfjasdf[[Page1]]wer[[Page4]]oiwerweiru"),
+        (0, "Page3", "sdldlkfjasdf[[Page3]]weroiwerwe[[Page4]]iru"),
+        (0, "Page4", "sdldlkfjasdfweroiwerweiru"), (0, "Page5", "sdldlkfjasdfweroiwerweiru")
+    ]
+    C, L, I = pages_to_cli(l_test)
+
+    print(C)
+    print(L)
+    print(I)

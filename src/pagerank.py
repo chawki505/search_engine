@@ -32,20 +32,25 @@ def sort_page_by_score(request,  dic_word_page, P, alpha=0.5, beta=0.5):
     """
     :param request: list of word
     :param P: Pages rank
+    :param dic_word_page: word -> ((pages->tf),idf)
     :return:
         Page list sorted by score
         Dictionnary of ~10k most used words containing all the words from titles in form {word : ({page_id : TF_normalized}, IDF)}
     """
     # TODO : Fo utiliser l'algo WAND *soupire*....
     # Les pages qui contiennent les mots de la requete
-    page_of_request = [dic_word_page[word] for word in request]  # [[pages], idf]
+    new_dict = {}
+    for (key,value) in dic_word_page.items():
+        if key in request :
+            new_dict[key] = value
     s = set()
+    page_of_request = [dic_word_page[word] for word in request]  # [[pages], idf]
     for page_list, idf in page_of_request:
-        for page in page_list:
+        for page in page_list.keys():
             s.add(page)
     # mot -> (page -> tfidf) score = []
-    res = [(page_id, (alpha * (fd(page_id, request, dic_word_page)) + beta * P[page_id])) for page_id in s]
-    return sorted(res)
+    res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * P[page_id])) for page_id in s]
+    return sorted(res, key=lambda t: t[1], reverse=True)
 
 
 def fd(d, r, dic_word_page):
@@ -56,7 +61,7 @@ def fd(d, r, dic_word_page):
     norm = math.sqrt(norm)
     res = 0
     for m in r:
-        res += dic_word_page[m][1] * dic_word_page[m][d]
+        res +=  dic_word_page[m][1] * dic_word_page[m][0][d] if d in dic_word_page[m][0] else 0
     return res / norm
 
 
@@ -64,11 +69,11 @@ if __name__ == '__main__':
     file = "../data/corpus.xml"
     l_test = [
         (0, "Page0", "voiture lol hiboux arbre chien chat [[Page1]]weroiw[[Page3]]erweiru"),
-        (0, "Page1", "sdldlvoiture lol hiboux arbre chien chat voiture lol hiboux arbre chien chat kfjasdf[[Page0]]weroiwerweiru"),
-        (0, "Page2", "sdldlkfjasdf[[Page1]]wer[[Page4]]oiwerweivoiture lol hiboux arbre chien chat ru"),
-        (0, "Page3", "svoiture lol hiboux arbre chien chat dldlkfjasdf[[Page3]]weroiwerwe[[Page4]]iru"),
-        (0, "Page4", "sdldlkfjasdfweroiwerweiruvoiture lol hiboux arbre chien chat "),
-        (0, "Page5", "sdldlkfjasdfweroiwerwvoiture lol hiboux arbre chien chat eiru")
+        (1, "Page1", "sdldlvoiture lol hiboux arbre chien chat voiture lol hiboux arbre chien chat kfjasdf[[Page0]]weroiwerweiru"),
+        (2, "Page2", "sdldlkfjasdf[[Page1]]wer[[Page4]]oiwerweivoiture lol hiboux arbre chien chat ru"),
+        (3, "Page3", "voiture voiture lol hiboux arbre chien chat dldlkfjasdf[[Page3]]weroiwerwe[[Page4]]iru"),
+        (4, "Page4", "sdldlkfjasdfweroiwerweiruvoiture lol hiboux arbre chien chat "),
+        (5, "Page5", "sdldlkfjasdfweroiwerwvoiture lol hiboux arbre chien chat eiru")
     ]
     C, L, I = pages_to_cli(l_test)
 
@@ -85,3 +90,5 @@ if __name__ == '__main__':
     print(I)
 
     print(page_rank(C, L, I, 6))
+    print("VOICI LE RESULSTAT")
+    print(res)

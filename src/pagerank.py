@@ -20,7 +20,7 @@ def page_rank(C, L, I, k=1):
     P = [0] * n
     for _ in range(k):
         for i in range(n):
-            if i + 1 < len(L):
+            if i + 1 < n + 1:
                 if L[i] == L[i + 1]:  # Empty line
                     for j in range(n):
                         P[j] += 1 / n * Pi[i]

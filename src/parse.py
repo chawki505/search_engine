@@ -12,6 +12,7 @@ import spacy
 
 nlp = spacy.load("fr_core_news_lg")
 
+
 def get_links(page_text):
     """
     :param page_text: Page text
@@ -32,15 +33,16 @@ def pages_to_cli(l):
         Adjacency matrix of the web graph in CLI form
     """
     dic = {}
-    print("Hashmap creation")
-    for i, (_, title, _) in enumerate(l):
-        dic[title] = i 
-    print("Hashmap created")
+    dic_edges = {}
+    for i, (_, title, page) in enumerate(l):
+        dic[title.lower()] = i
+    for _, id in dic.items():
+        dic_edges[id] = [link for link in get_links(l[id][2]) if link in dic.keys()]
     C = []
     L = [0]
     I = []
-    for i, (_, title, page) in enumerate(l):
-        links = get_links(page)
+    for i, (_, _, page) in enumerate(l):
+        links = dic_edges[i]
         edge_nb = len(links)
         val = 1 / edge_nb if edge_nb > 0 else 0
         for link in links:
@@ -51,6 +53,7 @@ def pages_to_cli(l):
             I.append(link_id)
         L.append(L[-1] + edge_nb)
     return C, L, I
+
 
 def create_dict(page_list):
     """
@@ -97,7 +100,6 @@ def create_dict(page_list):
     return dico_title
 
 
-
 def parse_text_page(text):
     """
     Parse text to only get main parts of the text ("== Title ==" paragraphs)
@@ -128,8 +130,6 @@ def clean(page):
     :return:
         Apply cleanup and return a list of words
     """
-
-    
 
     # supprimer la punctuations
     croch_reg = re.compile(r"\[{2}|\]{2}")
@@ -199,21 +199,23 @@ def parse(file_name):
     C, L, I = pages_to_cli(page_list)
     print(" * Cleaning")
     listsize = len(page_list)
-    for i,(id, title, content) in enumerate(page_list):
+    for i, (id, title, content) in enumerate(page_list):
         if i % 1000 == 0:
-            print(str(i/listsize * 100), "%")
+            print(str(i / listsize * 100), "%")
         page_list[i] = (id, title, clean(content))
     return page_list, (C, L, I)
+
 
 if __name__ == '__main__':
     file = "../data/corpus.xml"
     l_test = [
-        (0, "Page0", "sdldlkfjasdf[[Page1]]weroiw[[Page3]]erweiru"),
-        (0, "Page1", "sdldlkfjasdf[[Page0]]weroiwerweiru"),
-        (0, "Page2", "sdldlkfjasdf[[Page1]]wer[[Page4]]oiwerweiru"),
-        (0, "Page3", "sdldlkfjasdf[[Page3]]weroiwerwe[[Page4]]iru"),
-        (0, "Page4", "sdldlkfjasdfweroiwerweiru"), (0, "Page5", "sdldlkfjasdfweroiwerweiru")
+        (0, "Page0", "sdldlkfjasdf[[Page1]]weroiw[[Page2]]erweiru[[Page3]]jhgfdfghj"),
+        (1, "Page1", "sdldlkfjasdf[[page0]]weroiwer[[Page2]]weiru"),
+        (2, "Page2", "sdldlkfjasdfweroiwerweiru"),
+        (3, "Page3", "sdldlkfjasdf[[PaGe1]]weroiwerweiru"),
+
     ]
+
     C, L, I = pages_to_cli(l_test)
 
     print(C)

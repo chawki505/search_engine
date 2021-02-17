@@ -1,4 +1,5 @@
-from parse import clean, pages_to_cli,create_dict
+from parse import clean, pages_to_cli, create_dict
+from src.utils import deserialize
 
 
 def error(pi, pre_pi):
@@ -8,12 +9,13 @@ def error(pi, pre_pi):
     return c
 
 
-def page_rank(C, L, I, n, k=1):
+def page_rank(C, L, I, k=1):
     """
     :param n: Matrix length
     :param k: iteration nb
     :return: List of page rank (indices are pages ids)
     """
+    n = len(L) - 1
     Pi = [1 / n for _ in range(n)]
     P = [0] * n
     for _ in range(k):
@@ -28,7 +30,7 @@ def page_rank(C, L, I, n, k=1):
     return P
 
 
-def sort_page_by_score(request,  dic_word_page, P, alpha=0.5, beta=0.5):
+def sort_page_by_score(request, dic_word_page, P, alpha=0.5, beta=0.5):
     """
     :param request: list of word
     :param P: Pages rank
@@ -40,8 +42,8 @@ def sort_page_by_score(request,  dic_word_page, P, alpha=0.5, beta=0.5):
     # TODO : Fo utiliser l'algo WAND *soupire*....
     # Les pages qui contiennent les mots de la requete
     new_dict = {}
-    for (key,value) in dic_word_page.items():
-        if key in request :
+    for (key, value) in dic_word_page.items():
+        if key in request:
             new_dict[key] = value
     s = set()
     page_of_request = [dic_word_page[word] for word in request]  # [[pages], idf]
@@ -56,39 +58,55 @@ def sort_page_by_score(request,  dic_word_page, P, alpha=0.5, beta=0.5):
 def fd(d, r, dic_word_page):
     import math
     norm = 0
-    for _,idf in dic_word_page.values():
-        norm += idf**2
+    for _, idf in dic_word_page.values():
+        norm += idf ** 2
     norm = math.sqrt(norm)
     res = 0
     for m in r:
-        res +=  dic_word_page[m][1] * dic_word_page[m][0][d] if d in dic_word_page[m][0] else 0
+        res += dic_word_page[m][1] * dic_word_page[m][0][d] if d in dic_word_page[m][0] else 0
     return res / norm
 
 
 if __name__ == '__main__':
-    file = "../data/corpus.xml"
+    # file = "../data/corpus.xml"
     l_test = [
-        (0, "Page0", "voiture lol hiboux arbre chien chat [[Page1]]weroiw[[Page3]]erweiru"),
-        (1, "Page1", "sdldlvoiture lol hiboux arbre chien chat voiture lol hiboux arbre chien chat kfjasdf[[Page0]]weroiwerweiru"),
-        (2, "Page2", "sdldlkfjasdf[[Page1]]wer[[Page4]]oiwerweivoiture lol hiboux arbre chien chat ru"),
-        (3, "Page3", "voiture voiture lol hiboux arbre chien chat dldlkfjasdf[[Page3]]weroiwerwe[[Page4]]iru"),
-        (4, "Page4", "sdldlkfjasdfweroiwerweiruvoiture lol hiboux arbre chien chat "),
-        (5, "Page5", "sdldlkfjasdfweroiwerwvoiture lol hiboux arbre chien chat eiru")
+        (0, "Page0", "sdldlkfjasdf[[Page1]]weroiw[[Page2]]erweiru[[Page3]]jhgfdfghj"),
+        (1, "Page1", "sdldlkfjasdf[[Page0]]weroiwer[[Page2]]weiru"),
+        (2, "Page2", "sdldlkfjasdfweroiwerweiru"),
+        (3, "Page3", "sdldlkfjasdf[[Page1]]weroiwerweiru")
     ]
     C, L, I = pages_to_cli(l_test)
 
-    l_test = [(a,b,clean(content)) for a,b,content in l_test]
+    l_test = [(a, b, clean(content)) for a, b, content in l_test]
 
-    P = page_rank(C,L,I,6, 10)
+    P = page_rank(C, L, I, 10)
 
     dict = create_dict(l_test)
 
-    res = sort_page_by_score(["voiture", "arbre"],dict,P)
+    res = sort_page_by_score(["voiture", "arbre"], dict, P)
 
     print(C)
     print(L)
     print(I)
 
-    print(page_rank(C, L, I, 6))
+    print(P)
     print("VOICI LE RESULSTAT")
     print(res)
+
+    # (C, L, I) = deserialize("../data/CLI.serialized")
+    #
+    # print(len(C))
+    # print(len(L))
+    # print(len(I))
+    #
+    # print("init page rank")
+    # P = page_rank(C, L, I, k=1)
+    #
+    # dicto = deserialize("../data/dict.serialized")
+    # req = "theatre comedie française"
+    #
+    # print("sort page by score")
+    # res = sort_page_by_score(clean(req), dicto, P)
+    #
+    # print("VOICI LE RESULSTAT")
+    # print(res[:10])

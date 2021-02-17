@@ -60,7 +60,7 @@ def create_dict(page_list):
     """
     dico_title = dict()
     dico_text = dict()
-    for (id, title, content) in page_list:
+    for id, (_, title, content) in enumerate(page_list):
         title_lemmatized = [x.lemma_ for x in nlp(title)]
         for word in title_lemmatized:
             if word not in dico_title.keys():  # word not in dict

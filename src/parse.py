@@ -21,7 +21,7 @@ def get_links(page_text):
     """
     import re
     l = re.findall('\[\[.*?\]\]', page_text)
-    return [s[2:-2].split("|")[0] for s in l]
+    return [s[2:-2].split("|")[0].lower() for s in l]
 
 
 def pages_to_cli(l):

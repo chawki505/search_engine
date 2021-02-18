@@ -5,7 +5,7 @@ from utils import serialize, deserialize
 
 def _pregenerate_and_serialize():
     print(" * Start parse")
-    mylist = parse("../data/test.xml")
+    mylist = parse("../data/corpus.xml")
 
     print(" * Start serialize list before clean")
     serialize(mylist, "../data/pagelist_noclean.serialized")

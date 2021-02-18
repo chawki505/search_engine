@@ -1,21 +1,35 @@
-from parse import parse, create_dict
+from parse import parse, create_dict, pages_to_cli, clean_page_list
 
 from utils import serialize, deserialize
 
 
 def _pregenerate_and_serialize():
     print(" * Start parse")
-    mylist, (C, L, I) = parse("../data/test.xml")
-    print(" * Start serialize list")
-    serialize(mylist, "../data/pagelist.serialized")
+    mylist = parse("../data/test.xml")
+
+    print(" * Start serialize list before clean")
+    serialize(mylist, "../data/pagelist_noclean.serialized")
+
+    print(" * Start CLI")
+    C, L, I = pages_to_cli(mylist)
+
     print(" * Start serialize CLI")
     serialize((C, L, I), "../data/CLI.serialized")
+
+    print(" * Start cleaning page list")
+    mylist = clean_page_list(mylist)
+
+    print(" * Start serialize list after clean")
+    serialize(mylist, "../data/pagelist_clean.serialized")
+
     print(" * Start create dict")
-    d = create_dict(mylist)
+    mydico = create_dict(mylist)
+
     print(" * Start serialize dict")
-    serialize(d, "../data/dict.serialized")
+    serialize(mydico, "../data/dico.serialized")
+
+    print("* Finish")
 
 
 if __name__ == '__main__':
     _pregenerate_and_serialize()
-    pass

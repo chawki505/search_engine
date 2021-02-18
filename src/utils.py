@@ -194,3 +194,8 @@ def serialize(d, path):
 def deserialize(path):
     with open(path, "rb") as file:
         return pickle.load(file)
+
+
+def print_percentage(current_i, max_size):
+    if current_i % 1000 == 0:
+        print("\t- ", str(current_i / max_size * 100), "%")

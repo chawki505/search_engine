@@ -6,7 +6,7 @@ import math
 
 from bs4 import BeautifulSoup
 
-from utils import delete_brackets, mystopwords
+from utils import delete_brackets, mystopwords, print_percentage
 
 import spacy
 
@@ -52,6 +52,7 @@ def pages_to_cli(l):
             C.append(val)
             I.append(link_id)
         L.append(L[-1] + edge_nb)
+        print_percentage(i, len(l))
     return C, L, I
 
 
@@ -63,6 +64,7 @@ def create_dict(page_list):
     """
     dico_title = dict()
     dico_text = dict()
+    pages_list_size = len(page_list)
     for id, (_, title, content) in enumerate(page_list):
         title_lemmatized = [x.lemma_ for x in nlp(title)]
         for word in title_lemmatized:
@@ -81,6 +83,7 @@ def create_dict(page_list):
                     dico_text[word][0][id] = 1
                 else:  # page already in list
                     dico_text[word][0][id] += 1
+        print_percentage(id, pages_list_size)
     dico_title.update({key: value for key, value in
                        sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))[-10000:]})
     tf_norm = dict()  # normalized TF
@@ -166,7 +169,6 @@ def parse(file_name):
     content = None
 
     for event, elem in ET.iterparse(file_name, events=('start', 'end')):
-
         tname = elem.tag
 
         if event == 'start':
@@ -175,9 +177,7 @@ def parse(file_name):
                 title = ''
                 id = -1
                 content = ''
-
         else:
-
             if tname == 'title':
                 title = elem.text
 
@@ -193,17 +193,18 @@ def parse(file_name):
                 soup = BeautifulSoup(content, "html5lib")
                 page_list.append((id, title, parse_text_page(soup.get_text(strip=True))))
 
+                print_percentage(total_pages_count, 280070)
+
             elem.clear()
 
-    print(" * Creating CLI")
-    C, L, I = pages_to_cli(page_list)
-    print(" * Cleaning")
+    return page_list
+
+
+def clean_page_list(page_list):
     listsize = len(page_list)
     for i, (id, title, content) in enumerate(page_list):
-        if i % 1000 == 0:
-            print(str(i / listsize * 100), "%")
+        print_percentage(i, listsize)
         page_list[i] = (id, title, clean(content))
-    return page_list, (C, L, I)
 
 
 if __name__ == '__main__':

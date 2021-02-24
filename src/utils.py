@@ -198,4 +198,4 @@ def deserialize(path):
 
 def print_percentage(current_i, max_size):
     if current_i % 1000 == 0:
-        print("\t- ", str(current_i / max_size * 100), "%")
+        print("\t- ", "%.4f" % (current_i / max_size * 100), " %")

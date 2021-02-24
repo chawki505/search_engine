@@ -21,7 +21,7 @@ def get_links(page_text):
     """
     import re
     l = re.findall('\[\[.*?\]\]', page_text)
-    return [s[2:-2].split("|")[0].lower() for s in l]
+    return [s[2:-2].split("|")[0] for s in l]
 
 
 def pages_to_cli(l):
@@ -34,14 +34,18 @@ def pages_to_cli(l):
     """
     dic = {}
     dic_edges = {}
-    for i, (_, title, page) in enumerate(l):
-        dic[title.lower()] = i
+    for i, (_, title, _) in enumerate(l):
+        # dic[title.lower()] = i
+        dic[title] = i
+
     for _, id in dic.items():
         dic_edges[id] = [link for link in get_links(l[id][2]) if link in dic.keys()]
     C = []
     L = [0]
     I = []
     for i, (_, _, page) in enumerate(l):
+        # if i not in dic_edges.keys():
+        #    continue
         links = dic_edges[i]
         edge_nb = len(links)
         val = 1 / edge_nb if edge_nb > 0 else 0

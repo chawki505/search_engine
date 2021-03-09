@@ -1,5 +1,6 @@
 from parse import clean, pages_to_cli, create_dict
 from utils import deserialize, serialize, print_percentage
+import numpy as np
 
 
 def error(pi, pre_pi):
@@ -32,10 +33,12 @@ def page_rank(C, L, I, k=1):
     return P
 
 
-def sort_page_by_score(request, dic_word_page, P, alpha=0.5, beta=0.5):
+def sort_page_by_score(request, dic_word_page, page_rank, alpha=0.001, beta=0.999):
     """
+    :param beta:
+    :param alpha:
     :param request: list of word
-    :param P: Pages rank
+    :param page_rank: Pages rank
     :param dic_word_page: word -> ((pages->tf),idf)
     :return:
         Page list sorted by score
@@ -53,7 +56,7 @@ def sort_page_by_score(request, dic_word_page, P, alpha=0.5, beta=0.5):
         for page in page_list.keys():
             s.add(page)
     # mot -> (page -> tfidf) score = []
-    res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * P[page_id])) for page_id in s]
+    res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
     return sorted(res, key=lambda t: t[1], reverse=True)
 
 
@@ -71,51 +74,24 @@ def fd(d, r, dic_word_page):
 
 
 if __name__ == '__main__':
-    # file = "../data/corpus.xml"
-    # l_test = [
-    #     (0, "Page0", "sdldlkfjasdf[[Page1]]weroiw[[Page2]]erweiru[[Page3]]jhgfdfghj"),
-    #     (1, "Page1", "sdldlkfjasdf[[Page0]]weroiwer[[Page2]]weiru"),
-    #     (2, "Page2", "sdldlkfjasdfweroiwerweiru"),
-    #     (3, "Page3", "sdldlkfjasdf[[Page1]]weroiwerweiru")
-    # ]
-    # C, L, I = pages_to_cli(l_test)
-    #
-    # l_test = [(a, b, clean(content)) for a, b, content in l_test]
-    #
-    # P = page_rank(C, L, I, 10)
-    #
-    # dict = create_dict(l_test)
-    #
-    # res = sort_page_by_score(["voiture", "arbre"], dict, P)
-    #
-    # print(C)
-    # print(L)
-    # print(I)
-    #
-    # print(P)
-    # print("VOICI LE RESULSTAT")
-    # print(res)
 
-    # print("deserialize CLI")
-    # (C, L, I) = deserialize("../data/CLI.serialized")
+    print("deserialize CLI")
+    (C, L, I) = deserialize("../data/CLI.serialized")
 
-    # print("init page rank")
-    # P = page_rank(C, L, I, k=1)
+    print("init page rank")
+    P = page_rank(C, L, I, k=1)
 
-    # print("serialize page rank")
-    # serialize(P, "../data/pagerank.serialized")
+    print("serialize page rank")
+    serialize(P, "../data/pagerank2.serialized")
 
-    print("deserialize pagerank")
-    P = deserialize("../data/pagerank.serialized")
+    # print("deserialize pagerank")
+    # P = deserialize("../data/pagerank2.serialized")
 
     print("deserialize dico")
-    dicto = deserialize("../data/dico.serialized")
+    dicto = deserialize("../data/dico2.serialized")
 
     print("deserialize page list")
     page_list = deserialize("../data/pagelist_noclean.serialized")
-
-    for i in page_list[:30]:
-        print(i[1])
 
     while True:
 
@@ -124,12 +100,21 @@ if __name__ == '__main__':
         if req == "exit 0":
             break
 
+        # clean_req = clean(req)
+
+        print("clean req = ", req.split())
         print("sort page by score")
-        res = sort_page_by_score(clean(req), dicto, P)
+        for alpha in np.arange(0, 0.2, 0.001):
+            # alpha = 0.001
+            beta = 1 - alpha
 
-        print("VOICI LE RESULSTAT")
+            if beta > 0:
 
-        for i in res[:20]:
-            link = "https://fr.wikipedia.org/?curid={0}"
-            # print(page_list[i[0]][1], " ", link.format(page_list[i[0]][1].replace(" ", "_").replace("'", "%27")))
-            print(page_list[i[0]][1], " ", link.format(page_list[i[0]][0]))
+                res = sort_page_by_score(req.split(), dicto, P, alpha, beta)
+
+                print("\nVOICI LE RESULSTAT pour alpha = ", alpha, "beta = ", beta)
+
+                for i in res[:5]:
+                    link = "https://fr.wikipedia.org/?curid={0}"
+                    # print(page_list[i[0]][1], " ", link.format(page_list[i[0]][1].replace(" ", "_").replace("'", "%27")))
+                    print(page_list[i[0]][1], " ", link.format(page_list[i[0]][0]))

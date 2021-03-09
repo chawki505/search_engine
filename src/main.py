@@ -10,11 +10,14 @@ def _pregenerate_and_serialize():
     print(" * Start serialize list before clean")
     serialize(mylist, "../data/pagelist_noclean.serialized")
 
+    # print(" * Start deserialize list before clean")
+    # mylist = deserialize("../data/pagelist_noclean.serialized")
+
     print(" * Start CLI")
     C, L, I = pages_to_cli(mylist)
 
     print(" * Start serialize CLI")
-    serialize((C, L, I), "../data/CLI.serialized")
+    serialize((C, L, I), "../data/CLI2.serialized")
 
     print(" * Start cleaning page list")
     mylist = clean_page_list(mylist)
@@ -22,11 +25,14 @@ def _pregenerate_and_serialize():
     print(" * Start serialize list after clean")
     serialize(mylist, "../data/pagelist_clean.serialized")
 
+    # print(" * Start deserialize list after clean")
+    # mylist = deserialize("../data/pagelist_clean.serialized")
+
     print(" * Start create dict")
     mydico = create_dict(mylist)
 
     print(" * Start serialize dict")
-    serialize(mydico, "../data/dico.serialized")
+    serialize(mydico, "../data/dico2.serialized")
 
     print("* Finish")
 

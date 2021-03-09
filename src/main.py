@@ -17,7 +17,7 @@ def _pregenerate_and_serialize():
     C, L, I = pages_to_cli(mylist)
 
     print(" * Start serialize CLI")
-    serialize((C, L, I), "../data/CLI2.serialized")
+    serialize((C, L, I), "../data/CLI.serialized")
 
     print(" * Start cleaning page list")
     mylist = clean_page_list(mylist)
@@ -32,7 +32,7 @@ def _pregenerate_and_serialize():
     mydico = create_dict(mylist)
 
     print(" * Start serialize dict")
-    serialize(mydico, "../data/dico2.serialized")
+    serialize(mydico, "../data/dico.serialized")
 
     print("* Finish")
 

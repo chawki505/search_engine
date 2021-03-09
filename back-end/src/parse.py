@@ -1,0 +1,228 @@
+import xml.etree.ElementTree as ET
+
+import string
+import re
+import math
+
+from bs4 import BeautifulSoup
+
+from utils import delete_brackets, mystopwords, print_percentage
+
+import spacy
+
+nlp = spacy.load("fr_core_news_lg")
+
+
+def get_links(page_text):
+    """
+    :param page_text: Page text
+    :return:
+    The list of external link of the page
+    """
+    import re
+    l = re.findall('\[\[.*?\]\]', page_text)
+    return [s[2:-2].split("|")[0] for s in l]
+
+
+def pages_to_cli(l):
+    """
+    edge : [[Title]] in page content
+    node : page id
+    :param l: list of pair containing (id, title, page content)
+    :return:
+        Adjacency matrix of the web graph in CLI form
+    """
+    dic = {}
+    dic_edges = {}
+    for i, (_, title, _) in enumerate(l):
+        # dic[title.lower()] = i
+        dic[title] = i
+
+    for _, id in dic.items():
+        dic_edges[id] = [link for link in get_links(l[id][2]) if link in dic.keys()]
+    C = []
+    L = [0]
+    I = []
+    for i, (_, _, page) in enumerate(l):
+        # if i not in dic_edges.keys():
+        #    continue
+        links = dic_edges[i]
+        edge_nb = len(links)
+        val = 1 / edge_nb if edge_nb > 0 else 0
+        for link in links:
+            if link not in dic.keys():
+                continue
+            link_id = dic[link]
+            C.append(val)
+            I.append(link_id)
+        L.append(L[-1] + edge_nb)
+        print_percentage(i, len(l))
+    return C, L, I
+
+
+def create_dict(page_list):
+    """
+    :param page_list: list of pages to parse
+    :return:
+        Dictionnary of ~10k most used words containing all the words from titles in form {word : ({page_id : TF_normalized}, IDF)}
+    """
+    dico_title = dict()
+    dico_text = dict()
+    pages_list_size = len(page_list)
+    for id, (_, title, content) in enumerate(page_list):
+        title_lemmatized = [x.lemma_ for x in nlp(title)]
+        for word in title_lemmatized:
+            if word not in dico_title.keys():  # word not in dict
+                dico_title[word] = ({id: 1}, 0)
+            else:  # word in dict
+                if id not in dico_title[word][0].keys():  # page is not in list
+                    dico_title[word][0][id] = 100
+                else:  # page already in list
+                    dico_title[word][0][id] += 100
+        for word in content:
+            if word not in dico_text.keys():
+                dico_text[word] = ({id: 1}, 0)
+            else:
+                if id not in dico_text[word][0].keys():  # page is not in list
+                    dico_text[word][0][id] = 1
+                else:  # page already in list
+                    dico_text[word][0][id] += 1
+        print_percentage(id, pages_list_size)
+    dico_title.update({key: value for key, value in
+                       sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))[-10000:]})
+    tf_norm = dict()  # normalized TF
+    for word, (occ_dic, idf) in dico_title.items():
+        for pageid, freq in occ_dic.items():
+            if freq > 0:
+                if pageid not in tf_norm.keys():
+                    tf_norm[pageid] = (1 + math.log10(freq)) ** 2
+                else:
+                    tf_norm[pageid] += (1 + math.log10(freq)) ** 2
+    # writing IDF and normalized TF
+    for word in dico_title.keys():
+        idf = math.log10(len(page_list) / len(dico_title[word][0].keys()))
+        dico_title[word] = (dico_title[word][0], idf)
+        for page, tf in dico_title[word][0].items():
+            dico_title[word][0][page] = tf / math.sqrt(tf_norm[page])
+    return dico_title
+
+
+def parse_text_page(text):
+    """
+    Parse text to only get main parts of the text ("== Title ==" paragraphs)
+    :param text:
+    :return:
+        A clean "string" text
+    """
+    is_in_subtitle = False
+    sub_title_re = "=== Bibliographie ===|== Notes et références ==|== Voir aussi =="
+    final_text = ""
+
+    text = delete_brackets(text)
+
+    for line in text.split("\n"):
+        if re.match(sub_title_re, line):
+            is_in_subtitle = True
+            # continue ??
+        if re.match("== .* ==", line) and not is_in_subtitle:
+            is_in_subtitle = False
+        if not is_in_subtitle:
+            final_text += line + "\n"
+    return final_text
+
+
+def clean(page):
+    """
+    :param page: text to clean
+    :return:
+        Apply cleanup and return a list of words
+    """
+
+    # supprimer la punctuations
+    croch_reg = re.compile(r"\[{2}|\]{2}")
+    text = croch_reg.sub(r'', page)
+
+    punctuations_reg = re.compile(r"[!\"#$%&()*+’,-./:;<=>«»?@\[\]^_`{|}~]+|'{2,5}|http(s)?://\S+|www.\S+")
+    # digits_reg = re.compile('[%s]' % re.escape(string.digits))
+    text = punctuations_reg.sub(r' ', text)
+    text = " ".join(text.split())
+
+    # Tokeniser le text
+    tokens = nlp(text)
+
+    # Lemmatization
+    lemm_tokens = [str(x.lemma_).lower() for x in tokens if
+                   str(x.text).lower() not in mystopwords and str(x.lemma_).lower() not in mystopwords]
+
+    return lemm_tokens
+
+
+def parse(file_name):
+    """
+    :param file_name:
+        XML file containing pages data
+    :return:
+        List of tuple containing (id, title, content) for each page
+    """
+
+    page_list = []
+    total_pages_count = 0
+
+    id = None
+    title = None
+    content = None
+
+    for event, elem in ET.iterparse(file_name, events=('start', 'end')):
+        tname = elem.tag
+
+        if event == 'start':
+
+            if tname == 'page':
+                title = ''
+                id = -1
+                content = ''
+        else:
+            if tname == 'title':
+                title = elem.text
+
+            elif tname == 'id':
+                id = int(elem.text)
+
+            elif tname == 'text':
+                content = elem.text
+
+            elif tname == 'page':
+                total_pages_count += 1
+                # format html
+                soup = BeautifulSoup(content, "html5lib")
+                page_list.append((id, title, parse_text_page(soup.get_text(strip=True))))
+
+                print_percentage(total_pages_count, 280070)
+
+            elem.clear()
+
+    return page_list
+
+
+def clean_page_list(page_list):
+    listsize = len(page_list)
+    for i, (id, title, content) in enumerate(page_list):
+        print_percentage(i, listsize)
+        page_list[i] = (id, title, clean(content))
+
+
+if __name__ == '__main__':
+    file = "../data/corpus.xml"
+    l_test = [
+        (0, "Page0", "sdldlkfjasdf[[Page1]]weroiw[[Page2]]erweiru[[Page3]]jhgfdfghj"),
+        (1, "Page1", "sdldlkfjasdf[[page0]]weroiwer[[Page2]]weiru"),
+        (2, "Page2", "sdldlkfjasdfweroiwerweiru"),
+        (3, "Page3", "sdldlkfjasdf[[PaGe1]]weroiwerweiru"),
+
+    ]
+
+    C, L, I = pages_to_cli(l_test)
+
+    print(C)
+    print(L)
+    print(I)

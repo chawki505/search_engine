@@ -82,13 +82,13 @@ if __name__ == '__main__':
     P = page_rank(C, L, I, k=1)
 
     print("serialize page rank")
-    serialize(P, "../data/pagerank2.serialized")
+    serialize(P, "../data/pagerank.serialized")
 
     # print("deserialize pagerank")
-    # P = deserialize("../data/pagerank2.serialized")
+    # P = deserialize("../data/pagerank.serialized")
 
     print("deserialize dico")
-    dicto = deserialize("../data/dico2.serialized")
+    dicto = deserialize("../data/dico.serialized")
 
     print("deserialize page list")
     page_list = deserialize("../data/pagelist_noclean.serialized")

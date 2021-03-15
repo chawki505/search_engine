@@ -86,7 +86,7 @@ def valid_category(page):
                               r'([pP]o[ée]sie(s)?)|'
                               r'([pP]o[èe]me(s)?)|'
                               r'([pP]o[èe]te(s)?(sse(s)?)?)|'
-                              r'([hH]omonymie(s)?)|'
+                              #  r'([hH]omonymie(s)?)|'
                               #  r'([ÉEée]cri((vain)|(ture)|(t(e)?))(s)?)|'
                               r'([ÉEée]crivain(s)?)|'
                               r'([Pp]resse(s)?)|'
@@ -100,8 +100,8 @@ def valid_category(page):
                               r'([aA]uteur)|'
                               r'([rR]echerche)|'
                               r'([oO]uvrage(s)?)|'
-                              #     r'([tT]exte)|'
-                              r'([nN]arratologie)|'
+                              # r'([tT]exte)|'
+                              # r'([nN]arratologie)|'
                               r'([rR][eé]cit)|'
                               r'([pP]hilologie)|'
                               r'([rR]evue)|'
@@ -113,7 +113,7 @@ def valid_category(page):
                               r'([oO]euvre(s)?)|'
                               r'([bB]iblioth[èe]que(s)?)'
                               # r'([mM]us[eé]e(s)?)|'
-                              #   r'([cC]ulture(s)?)|'
+                              # r'([cC]ulture(s)?)|'
                               #      r'([aA]rt)'
                               r')(.*?)\]+')
 
@@ -199,3 +199,36 @@ def deserialize(path):
 def print_percentage(current_i, max_size):
     if current_i % 1000 == 0:
         print("\t- ", "%.4f" % (current_i / max_size * 100), " %")
+
+
+def remove_html_tags(page):
+    """Remove html tags from a string"""
+    # clean = re.compile('<.*?>')
+    clean_double_tags = re.compile(r"<(.*?)>(.*?)<(.*?)>")
+    clean_single_tags = re.compile(r"<(.*?)>")
+
+    page = re.sub(clean_double_tags, ' ', page)
+    page = re.sub(clean_single_tags, ' ', page)
+
+    return page
+
+
+def remove_brackets(page):
+    """Remove brackets tags from a string"""
+    clean = re.compile(r"{{[^}{]*}}", flags=re.MULTILINE)
+    if page:
+        while clean.search(page):
+            page = re.sub(clean, ' ', page)
+    return page
+
+
+def get_links(page_text):
+    """
+    :param page_text: Page text
+    :return:
+    The list of external link of the page
+    """
+    import re
+    ragex = re.compile(r'\[\[.*?\]\]')
+    l = ragex.findall(page_text)
+    return [s[2:-2].split("|")[0] for s in l]

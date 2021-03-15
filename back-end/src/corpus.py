@@ -1,24 +1,11 @@
 import xml.etree.ElementTree as ET
 import csv
 import time
-import os
 import io
 
 from utils import valid_category, strip_tag_name, hms_string
 
-PATH_DATA = '../data/'
-# FILENAME_WIKI = 'frwiki-20201201-pages-articles-multistream.xml'
-FILENAME_WIKI = 'frwiki10000.xml'
-
-FILENAME_PAGES_TITLE_CSV = 'pages-filtre.csv'
-# FILENAME_PAGES_TITLE_CSV = 'pages-filtre2.csv'
-
-FILENAME_CORPUS_XML = 'corpus.xml'
-# FILENAME_CORPUS_XML = 'corpus2.xml'
-
-pathWikiXML = os.path.join(PATH_DATA, FILENAME_WIKI)
-pathPages = os.path.join(PATH_DATA, FILENAME_PAGES_TITLE_CSV)
-pathCorpus = os.path.join(PATH_DATA, FILENAME_CORPUS_XML)
+from paths import path_pages_title_csv, path_corpus_xml, path_wiki_XML
 
 
 def create_corpus():
@@ -30,16 +17,17 @@ def create_corpus():
     ns = None
     in_revision = False
     is_created = False
+    is_redirection = False
 
     start_time = time.time()
 
-    with io.open(pathPages, 'w') as pagesFH, \
-            io.open(pathCorpus, 'w') as corpusFH:
+    with io.open(path_pages_title_csv, 'w') as pagesFH, \
+            io.open(path_corpus_xml, 'w') as corpusFH:
 
         page_writer_csv = csv.writer(pagesFH, quoting=csv.QUOTE_MINIMAL)
         page_writer_csv.writerow(['id', 'title'])
 
-        for event, elem in ET.iterparse(pathWikiXML, events=('start', 'end')):
+        for event, elem in ET.iterparse(path_wiki_XML, events=('start', 'end')):
             tname = strip_tag_name(elem.tag)
 
             if event == 'start':
@@ -48,12 +36,16 @@ def create_corpus():
                     corpusFH.write("<mediawiki>\n")
                     is_created = True
 
-                if tname == 'page':
+                elif tname == 'page':
                     ns = 0
                     title = ''
                     id = -1
+                    is_redirection = False
                     in_revision = False
                     content = ''
+
+                elif tname == 'redirect':
+                    is_redirection = True
 
                 elif tname == 'revision':
                     # Do not pick up on revision id's
@@ -71,7 +63,7 @@ def create_corpus():
                 elif tname == 'page':
                     total_pages_count += 1
 
-                    if ns == 0 and valid_category(content):
+                    if not is_redirection and ns == 0 and valid_category(content):
                         total_filtre_pages_count += 1
                         page_elem = ET.Element('page')
                         page_elem.text = "\n\t\t"
@@ -96,7 +88,6 @@ def create_corpus():
                     if total_pages_count > 1 and (total_pages_count % 10000) == 0:
                         print("Current pages : {:,}".format(total_pages_count))
                         print("Current pages filtre: {:,}".format(total_filtre_pages_count))
-
                 elem.clear()
 
         if is_created:

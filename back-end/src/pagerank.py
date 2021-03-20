@@ -1,7 +1,6 @@
 import time
 
-from parse import clean, pages_to_cli, create_dict
-from utils import deserialize, serialize, print_percentage, hms_string
+from utils import deserialize, serialize, print_percentage, hms_string, get_clean_tokens
 import numpy as np
 
 
@@ -12,7 +11,7 @@ def error(pi, pre_pi):
     return c
 
 
-def page_rank(C, L, I, k=1):
+def create_pagerank(C, L, I, k=1):
     """
     :param n: Matrix length
     :param k: iteration nb
@@ -35,13 +34,13 @@ def page_rank(C, L, I, k=1):
                         P[I[j]] += C[j] * Pi[i]
             print_percentage(i, n)
 
-    print("     ** Finish page_rank()")
+    print("     ** Finish create_pagerank()")
     elapsed_time = time.time() - start_time
-    print("     Elapsed time page_rank() : {}".format(hms_string(elapsed_time)))
+    print("     Elapsed time create_pagerank() : {}".format(hms_string(elapsed_time)))
     return P
 
 
-def sort_page_by_score(request, dic_word_page, page_rank, alpha=1e-3, beta=.85):
+def sort_page_by_score(request, dic_word_page, page_rank, alpha=5e-4, beta=.9995):
     """
     :param beta:
     :param alpha:
@@ -83,7 +82,6 @@ def fd(d, r, dic_word_page):
 
 if __name__ == '__main__':
 
-
     print("deserialize pagerank")
     P = deserialize("../data/pagerank.serialized")
 
@@ -100,7 +98,7 @@ if __name__ == '__main__':
         if req == "exit 0":
             break
 
-        clean_req = clean(req)
+        clean_req = get_clean_tokens(req)
 
         print("clean req = ", req.split())
         print("sort page by score")

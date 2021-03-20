@@ -3,6 +3,11 @@ import re
 # for serialization
 import pickle
 
+import spacy
+import string
+
+nlp = spacy.load("fr_core_news_lg")
+
 mystopwords = ["a", "abord", "absolument", "afin", "ah", "ai", "aie", "aient", "aies", "ailleurs", "ainsi", "ait",
                "allaient", "allo", "allons", "allô", "alors", "anterieur", "anterieure", "anterieures", "apres",
                "après", "as", "assez", "attendu", "au", "aucun", "aucune", "aucuns", "aujourd", "aujourd'hui", "aupres",
@@ -198,7 +203,7 @@ def deserialize(path):
 
 def print_percentage(current_i, max_size):
     if current_i % 1000 == 0:
-        print("\t- ", "%.4f" % (current_i / max_size * 100), " %")
+        print("\t\t- ", "%.4f" % (current_i / max_size * 100), " %")
 
 
 def remove_html_tags(page):
@@ -232,3 +237,148 @@ def get_links(page_text):
     ragex = re.compile(r'\[\[.*?\]\]')
     l = ragex.findall(page_text)
     return [s[2:-2].split("|")[0] for s in l]
+
+
+def unwiki(wiki):
+    """
+    Remove wiki markup from the text.
+    """
+    wiki = re.sub(r'(?i)\{\{IPA(\-[^\|\{\}]+)*?\|([^\|\{\}]+)(\|[^\{\}]+)*?\}\}', lambda m: m.group(2), wiki)
+    wiki = re.sub(r'(?i)\{\{Lang(\-[^\|\{\}]+)*?\|([^\|\{\}]+)(\|[^\{\}]+)*?\}\}', lambda m: m.group(2), wiki)
+    wiki = re.sub(r'\{\{[^\{\}]+\}\}', '', wiki)
+    wiki = re.sub(r'(?m)\{\{[^\{\}]+\}\}', '', wiki)
+    wiki = re.sub(r'(?m)\{\|[^\{\}]*?\|\}', '', wiki)
+    wiki = re.sub(r'(?i)\[\[Category:[^\[\]]*?\]\]', '', wiki)
+    wiki = re.sub(r'(?i)\[\[Image:[^\[\]]*?\]\]', '', wiki)
+    wiki = re.sub(r'(?i)\[\[File:[^\[\]]*?\]\]', '', wiki)
+    wiki = re.sub(r'\[\[[^\[\]]*?\|([^\[\]]*?)\]\]', lambda m: m.group(1), wiki)
+    wiki = re.sub(r'\[\[([^\[\]]+?)\]\]', lambda m: m.group(1), wiki)
+    wiki = re.sub(r'\[\[([^\[\]]+?)\]\]', '', wiki)
+    wiki = re.sub(r'(?i)File:[^\[\]]*?', '', wiki)
+    wiki = re.sub(r'\[[^\[\]]*? ([^\[\]]*?)\]', lambda m: m.group(1), wiki)
+    wiki = re.sub(r"''+", '', wiki)
+    wiki = re.sub(r'(?m)^\*$', '', wiki)
+
+    return wiki
+
+
+def unhtml(html):
+    """
+    Remove HTML from the text.
+    """
+    html = re.sub(r'(?i)&nbsp;', ' ', html)
+    html = re.sub(r'(?i)<br[ \\]*?>', '\n', html)
+    html = re.sub(r'(?m)<!--.*?--\s*>', '', html)
+    html = re.sub(r'(?i)<ref[^>]*>[^>]*<\/ ?ref>', '', html)
+    html = re.sub(r'(?m)<.*?>', '', html)
+    html = re.sub(r'(?i)&amp;', '&', html)
+
+    return html
+
+
+def punctuate(text):
+    """
+    Convert every text part into well-formed one-space
+    separate paragraph.
+    """
+    text = re.sub(r'\r\n|\n|\r', '\n', text)
+    text = re.sub(r'\n\n+', '\n\n', text)
+
+    parts = text.split('\n\n')
+    partsParsed = []
+
+    for part in parts:
+        part = part.strip()
+
+        if len(part) == 0:
+            continue
+
+        partsParsed.append(part)
+
+    return '\n\n'.join(partsParsed)
+
+
+def wiki_to_paintext(text):
+    content = text
+    content = unhtml(content)
+    content = unwiki(content)
+    content = punctuate(content)
+    return content
+
+
+def get_resume(text):
+    """
+    :param text: text to resume
+    :return: first paragraphe in the text
+    """
+    # regex = re.compile(r"^(.*?)\n")
+    # return regex.match(text).group(1)
+    return text[:500]
+
+
+def delete_section_textpage(textpage):
+    """
+    Parse text to only get main parts of the text ("== Title ==" paragraphs)
+    :param textpage:
+    :return:
+        A clean "string" text
+    """
+    is_in_subtitle = False
+    sub_title_re = "=== Bibliographie ===|== Notes et références ==|== Voir aussi =="
+    final_text = ""
+
+    for line in textpage.split("\n"):
+        if re.match(sub_title_re, line):
+            is_in_subtitle = True
+        if re.match("== .*? ==", line) and not is_in_subtitle:
+            is_in_subtitle = False
+        if not is_in_subtitle:
+            final_text += line + "\n"
+    return final_text
+
+
+def get_clean_tokens(textpage_plaintext, remove_section=False):
+    """
+    :param remove_section:
+    :param textpage_plaintext: text to clean in tokens
+    :return:
+        Apply cleanup and return a list of words
+    """
+    text = textpage_plaintext
+
+    if remove_section:
+        # remove and get only main parts of the text
+        text = delete_section_textpage(text)
+
+    # Tokenisation of text
+    tokens = nlp(text)
+
+    # whitespace
+    whitespace_reg = r'[ \t\n\r\v\f]'
+    whitespace = re.compile(whitespace_reg)
+
+    # Punctuation
+    punctuation_reg = r"[!\"'#$%&()*+’,./:;-<=>«»?@\[\]^_`{|}~]"
+    punctuation_reg2 = r"[\"'’]"
+    punctuation = re.compile(punctuation_reg2)
+
+    clean_tokens = []
+
+    for token in tokens:
+        if token.lemma_ not in punctuation_reg:
+            clean_whitespace = whitespace.sub('', token.lemma_)
+            clean_punc = punctuation.sub('', clean_whitespace)
+
+            if clean_punc not in mystopwords and len(clean_punc) >= 1:
+                clean_tokens.append(clean_punc)
+
+    # Lemmatization and remove whitespace and punctuation
+    # lemm_tokens = [whitespace.sub('', token.lemma_) for token in tokens if token.lemma_ not in punctuation_reg]
+
+    # remove other punctuation
+    # lemm_tokens = [punctuation.sub('', token) for token in lemm_tokens]
+
+    # remove mystopwords and empty token
+    # lemm_tokens = [token for token in lemm_tokens if token not in mystopwords and len(token) >= 1]
+
+    return clean_tokens

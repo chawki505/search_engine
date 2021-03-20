@@ -1,5 +1,5 @@
-from utils import wiki_to_paintext, get_clean_tokens, deserialize
-from paths import path_cli, path_pagelist_links
+from utils import wiki_to_paintext, get_clean_tokens, deserialize, serialize
+from paths import path_cli, path_pagelist_links, path_pagelist_clean_tokens, path_new_pagelist_clean_tokens
 
 if __name__ == '__main__':
     wiki_page = """
@@ -383,8 +383,16 @@ Catégorie:Méthode d'analyse
     # print('####################################')
     # print(clean)
     # print('####################################')
-    print(" * Start deserialize CLI")
-    (C, L, I) = deserialize(path_cli)
-    #print(" * Start deserialize links pagelist")
-    #pagelist_links = deserialize(path_pagelist_links)
+    # print(" * Start deserialize CLI")
+    # (C, L, I) = deserialize(path_cli)
+    # print(" * Start deserialize links pagelist")
+    # pagelist_links = deserialize(path_pagelist_links)
+    # print("break")
+
+    print("Start deserialize clean tokens pagelist")
+    pagelist_clean_tokens = deserialize(path_pagelist_clean_tokens)
+
+    print("Start deserialize new clean tokens pagelist")
+    new_pagelist_clean_tokens = deserialize(path_new_pagelist_clean_tokens)
+
     print("break")

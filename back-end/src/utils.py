@@ -370,7 +370,7 @@ def get_clean_tokens(textpage_plaintext, remove_section=False):
             clean_punc = punctuation.sub('', clean_whitespace)
 
             if clean_punc not in mystopwords and len(clean_punc) >= 1:
-                clean_tokens.append(clean_punc)
+                clean_tokens.append(clean_punc.lower())
 
     # Lemmatization and remove whitespace and punctuation
     # lemm_tokens = [whitespace.sub('', token.lemma_) for token in tokens if token.lemma_ not in punctuation_reg]

@@ -175,7 +175,7 @@ def create_dico(pagelist_clean_tokens):
                 if id not in dico_title[word][0].keys():  # page is not in list
                     dico_title[word][0][id] = 100
                 else:  # page already in list
-                    dico_title[word][0][id] += 50
+                    dico_title[word][0][id] += 70
 
         for word in content:
             if word not in dico_text.keys():
@@ -184,7 +184,7 @@ def create_dico(pagelist_clean_tokens):
                 if id not in dico_text[word][0].keys():  # page is not in list
                     dico_text[word][0][id] = 10
                 else:  # page already in list
-                    dico_text[word][0][id] += 5
+                    dico_text[word][0][id] += 7
 
         print_percentage(id, listsize)
 

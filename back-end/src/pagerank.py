@@ -1,5 +1,6 @@
-from parse import clean, pages_to_cli, create_dict
-from utils import deserialize, serialize, print_percentage
+import time
+
+from utils import deserialize, serialize, print_percentage, hms_string, get_clean_tokens
 import numpy as np
 
 
@@ -10,12 +11,14 @@ def error(pi, pre_pi):
     return c
 
 
-def page_rank(C, L, I, k=1):
+def create_pagerank(C, L, I, k=1):
     """
     :param n: Matrix length
     :param k: iteration nb
     :return: List of page rank (indices are pages ids)
     """
+    start_time = time.time()
+
     n = len(L) - 1
     Pi = [1 / n for _ in range(n)]
     P = [0] * n
@@ -30,10 +33,14 @@ def page_rank(C, L, I, k=1):
                     for j in range(L[i], L[i + 1]):
                         P[I[j]] += C[j] * Pi[i]
             print_percentage(i, n)
+
+    print("     ** Finish create_pagerank()")
+    elapsed_time = time.time() - start_time
+    print("     Elapsed time create_pagerank() : {}".format(hms_string(elapsed_time)))
     return P
 
 
-def sort_page_by_score(request, dic_word_page, page_rank, alpha=0.001, beta=0.999):
+def sort_page_by_score(request, dic_word_page, page_rank, alpha=1e-3, beta=.999):
     """
     :param beta:
     :param alpha:
@@ -42,7 +49,7 @@ def sort_page_by_score(request, dic_word_page, page_rank, alpha=0.001, beta=0.99
     :param dic_word_page: word -> ((pages->tf),idf)
     :return:
         Page list sorted by score
-        Dictionnary of ~10k most used words containing all the words from titles in form {word : ({page_id : TF_normalized}, IDF)}
+        Dictionnary of ~200k most used words containing all the words from titles in form {word : ({page_id : TF_normalized}, IDF)}
     """
     # TODO : Fo utiliser l'algo WAND *soupire*....
     # Les pages qui contiennent les mots de la requete
@@ -56,7 +63,18 @@ def sort_page_by_score(request, dic_word_page, page_rank, alpha=0.001, beta=0.99
         for page in page_list.keys():
             s.add(page)
     # mot -> (page -> tfidf) score = []
-    res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
+    # res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
+
+    res = []
+
+    for page_id in s:
+        freq = fd(page_id, request, new_dict)
+        pr = page_rank[page_id]
+        calcul = alpha * freq + beta * pr
+        print("F : ", freq, "| P : ", pr, " | score  : ")
+        res.append((page_id, calcul))
+
+    # res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
     return sorted(res, key=lambda t: t[1], reverse=True)
 
 
@@ -75,17 +93,8 @@ def fd(d, r, dic_word_page):
 
 if __name__ == '__main__':
 
-    print("deserialize CLI")
-    (C, L, I) = deserialize("../data/CLI.serialized")
-
-    print("init page rank")
-    P = page_rank(C, L, I, k=1)
-
-    print("serialize page rank")
-    serialize(P, "../data/pagerank.serialized")
-
-    # print("deserialize pagerank")
-    # P = deserialize("../data/pagerank.serialized")
+    print("deserialize pagerank")
+    P = deserialize("../data/pagerank.serialized")
 
     print("deserialize dico")
     dicto = deserialize("../data/dico.serialized")
@@ -100,7 +109,7 @@ if __name__ == '__main__':
         if req == "exit 0":
             break
 
-        # clean_req = clean(req)
+        clean_req = get_clean_tokens(req)
 
         print("clean req = ", req.split())
         print("sort page by score")

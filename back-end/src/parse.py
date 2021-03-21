@@ -173,24 +173,35 @@ def create_dico(pagelist_clean_tokens):
                 dico_title[word] = ({id: 1}, 0)
             else:  # word in dict
                 if id not in dico_title[word][0].keys():  # page is not in list
-                    dico_title[word][0][id] = 100
+                    dico_title[word][0][id] = 10
                 else:  # page already in list
-                    dico_title[word][0][id] += 70
+                    dico_title[word][0][id] += 10
 
         for word in content:
             if word not in dico_text.keys():
                 dico_text[word] = ({id: 1}, 0)
             else:
                 if id not in dico_text[word][0].keys():  # page is not in list
-                    dico_text[word][0][id] = 10
+                    dico_text[word][0][id] = 1
                 else:  # page already in list
-                    dico_text[word][0][id] += 7
+                    dico_text[word][0][id] += 1
 
         print_percentage(id, listsize)
 
     dico_title.update({key: value for key, value in
-                       sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))
-                       [-200000:]})
+                      sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))
+                      [-200000:]})
+
+    # for key, value in {key: value for key, value in
+    #                    sorted(list(dico_text.items()), key=lambda item: len(item[1][0].items()))[-200000:]}.items():
+    #     if key in dico_title.keys():
+    #         for page, freq in dico_text[key][0].items():
+    #             if page in dico_title[key][0].keys():
+    #                 dico_title[key][0][page] += freq
+    #             else:
+    #                 dico_title[key][0][page] = freq
+    #     else:
+    #         dico_title[key] = value
 
     tf_norm = dict()  # normalized TF
 

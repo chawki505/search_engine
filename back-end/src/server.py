@@ -3,7 +3,6 @@ from abc import ABC
 
 import tornado.ioloop
 import tornado.web
-import re
 
 from pagerank import sort_page_by_score
 from utils import deserialize, get_clean_tokens
@@ -32,7 +31,7 @@ class SearchHandler(tornado.web.RequestHandler, ABC):
         clean_req = get_clean_tokens(request)
         res = sort_page_by_score(clean_req, dictionnary, pagerank)
         top10res = []
-        for i in res[:15]:
+        for i in res[:20]:
             id = pagelist[i[0]][0]
             title = pagelist[i[0]][1]
             content = pagelist[i[0]][2]
@@ -58,11 +57,11 @@ def make_app():
 
 
 if __name__ == "__main__":
-    port = 8080
+    port = 1337
 
     app = make_app()
     app.listen(port)
 
-    print("http://localhost:{0}".format(port))
+    print("lien : http://localhost:{0}".format(port))
 
     tornado.ioloop.IOLoop.current().start()

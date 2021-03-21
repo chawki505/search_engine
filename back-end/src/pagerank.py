@@ -40,7 +40,7 @@ def create_pagerank(C, L, I, k=1):
     return P
 
 
-def sort_page_by_score(request, dic_word_page, page_rank, alpha=5e-4, beta=.9995):
+def sort_page_by_score(request, dic_word_page, page_rank, alpha=1e-3, beta=.999):
     """
     :param beta:
     :param alpha:
@@ -63,7 +63,18 @@ def sort_page_by_score(request, dic_word_page, page_rank, alpha=5e-4, beta=.9995
         for page in page_list.keys():
             s.add(page)
     # mot -> (page -> tfidf) score = []
-    res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
+    # res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
+
+    res = []
+
+    for page_id in s:
+        freq = fd(page_id, request, new_dict)
+        pr = page_rank[page_id]
+        calcul = alpha * freq + beta * pr
+        print("F : ", freq, "| P : ", pr, " | score  : ")
+        res.append((page_id, calcul))
+
+    # res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
     return sorted(res, key=lambda t: t[1], reverse=True)
 
 

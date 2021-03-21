@@ -114,6 +114,8 @@ def corpus_wiki_to_corpus_plaintext(file_name, pages_count=252374):
     title = None
     content = None
 
+    is_created = False
+
     with io.open(path_corpus_plaintext, 'w') as corpusPT:
 
         for event, elem in ET.iterparse(file_name, events=('start', 'end')):
@@ -121,7 +123,11 @@ def corpus_wiki_to_corpus_plaintext(file_name, pages_count=252374):
 
             if event == 'start':
 
-                if tname == 'page':
+                if tname == 'mediawiki':
+                    corpusPT.write("<mediawiki>\n")
+                    is_created = True
+
+                elif tname == 'page':
                     title = ''
                     id = -1
                     content = ''
@@ -141,26 +147,31 @@ def corpus_wiki_to_corpus_plaintext(file_name, pages_count=252374):
                     total_pages_count += 1
 
                     page_elem = ET.Element('page')
-                    page_elem.text = "\n\t"
+                    page_elem.text = "\n\t\t"
                     page_elem.tail = "\n"
 
                     title_elem = ET.SubElement(page_elem, 'title')
                     title_elem.text = title
-                    title_elem.tail = "\n\t"
+                    title_elem.tail = "\n\t\t"
 
                     id_elem = ET.SubElement(page_elem, 'id')
                     id_elem.text = str(id)
-                    id_elem.tail = "\n\t"
+                    id_elem.tail = "\n\t\t"
 
                     text_elem = ET.SubElement(page_elem, 'text')
-                    text_elem.text = content + "\t"
-                    text_elem.tail = "\n"
 
+                    text_elem.text = content
+                    text_elem.tail = "\n\t"
+
+                    corpusPT.write("\t")
                     corpusPT.write(ET.tostring(page_elem, encoding='unicode'))
 
                     print_percentage(total_pages_count, pages_count)
 
                 elem.clear()
+
+        if is_created:
+            corpusPT.write("</mediawiki>")
 
     elapsed_time = time.time() - start_time
     print(" ** Finish corpus_wiki_to_corpus_plaintext()")
@@ -170,3 +181,4 @@ def corpus_wiki_to_corpus_plaintext(file_name, pages_count=252374):
 if __name__ == '__main__':
     print(" * Start create corpus wiki")
     create_corpus_wiki(path_wiki_XML)
+    corpus_wiki_to_corpus_plaintext(path_corpus_xml)

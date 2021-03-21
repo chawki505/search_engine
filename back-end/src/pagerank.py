@@ -71,7 +71,7 @@ def sort_page_by_score(request, dic_word_page, page_rank, alpha=1e-3, beta=.999)
         freq = fd(page_id, request, new_dict)
         pr = page_rank[page_id]
         calcul = alpha * freq + beta * pr
-        print("F : ", freq, "| P : ", pr, " | score  : ")
+        print("Frequence : ", freq, "| Pagerank : ", pr, " | Score  : ",calcul)
         res.append((page_id, calcul))
 
     # res = [(page_id, (alpha * (fd(page_id, request, new_dict)) + beta * page_rank[page_id])) for page_id in s]
